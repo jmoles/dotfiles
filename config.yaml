@@ -14,8 +14,16 @@ dotfiles:
   f_init.toml:
     src: SpaceVim.d/init.toml
     dst: ~/.SpaceVim.d/init.toml
+    actions:
+      - spacevim-install
+      - spacevim
 profiles:
   wasp23:
     dotfiles:
     - f_bashrc
     - f_init.toml
+actions:
+  pre:
+    spacevim-install: curl -sLf https://spacevim.org/install.sh | bash
+  spacevim: vim +PluginInstall +qall
+
