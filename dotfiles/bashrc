@@ -1,0 +1,2 @@
+alias dotdrop=~/dotfiles/dotdrop.sh --cfg=~/dotfiles/config.yaml
+

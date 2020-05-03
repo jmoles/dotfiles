@@ -1,6 +1,21 @@
 config:
   backup: true
+  banner: true
   create: true
   dotpath: dotfiles
+  keepdot: false
+  link_dotfile_default: nolink
+  link_on_import: nolink
+  longkey: false
 dotfiles:
+  f_bashrc:
+    src: bashrc
+    dst: ~/.bashrc
+  f_init.toml:
+    src: SpaceVim.d/init.toml
+    dst: ~/.SpaceVim.d/init.toml
 profiles:
+  wasp23:
+    dotfiles:
+    - f_bashrc
+    - f_init.toml
