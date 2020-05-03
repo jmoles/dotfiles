@@ -15,15 +15,22 @@ dotfiles:
     src: SpaceVim.d/init.toml
     dst: ~/.SpaceVim.d/init.toml
     actions:
-      - spacevim-install
-      - spacevim
+    - spacevim-install
+    - spacevim
+  f_dracula.theme:
+    src: local/share/xfce4/terminal/colorschemes/Dracula.theme
+    dst: ~/.local/share/xfce4/terminal/colorschemes/Dracula.theme
+  f_gitconfig:
+    src: gitconfig
+    dst: ~/.gitconfig
 profiles:
   wasp23:
     dotfiles:
     - f_bashrc
     - f_init.toml
+    - f_dracula.theme
+    - f_gitconfig
 actions:
   pre:
     spacevim-install: curl -sLf https://spacevim.org/install.sh | bash
   spacevim: vim +PluginInstall +qall
-
