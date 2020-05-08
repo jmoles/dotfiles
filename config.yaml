@@ -47,6 +47,9 @@ dotfiles:
   f_pacman-listing.service:
     src: config/systemd/user/pacman-listing.service
     dst: ~/.config/systemd/user/pacman-listing.service
+  f_zshrc:
+    src: zshrc
+    dst: ~/.zshrc
 profiles:
   wasp23:
     dotfiles:
@@ -62,6 +65,7 @@ profiles:
     - f_at-home.service.example
     - f_syncthing.service
     - f_pacman-listing.service
+    - f_zshrc
 actions:
   pre:
     spacevim-install: curl -sLf https://spacevim.org/install.sh | bash
