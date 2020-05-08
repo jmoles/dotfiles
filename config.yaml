@@ -23,6 +23,30 @@ dotfiles:
   f_gitconfig:
     src: gitconfig
     dst: ~/.gitconfig
+  f_restic-backup.service:
+    src: config/systemd/user/restic-backup.service
+    dst: ~/.config/systemd/user/restic-backup.service
+  f_restic-backup.timer:
+    src: config/systemd/user/restic-backup.timer
+    dst: ~/.config/systemd/user/restic-backup.timer
+  f_restic-prune.service:
+    src: config/systemd/user/restic-prune.service
+    dst: ~/.config/systemd/user/restic-prune.service
+  f_restic-prune.timer:
+    src: config/systemd/user/restic-prune.timer
+    dst: ~/.config/systemd/user/restic-prune.timer
+  f_backup.conf.example:
+    src: config/restic/backup.conf.example
+    dst: ~/.config/restic/backup.conf.example
+  f_at-home.service.example:
+    src: config/systemd/user/at-home.service.example
+    dst: ~/.config/systemd/user/at-home.service.example
+  f_syncthing.service:
+    src: config/systemd/user/syncthing.service
+    dst: ~/.config/systemd/user/syncthing.service
+  f_pacman-listing.service:
+    src: config/systemd/user/pacman-listing.service
+    dst: ~/.config/systemd/user/pacman-listing.service
 profiles:
   wasp23:
     dotfiles:
@@ -30,6 +54,14 @@ profiles:
     - f_init.toml
     - f_dracula.theme
     - f_gitconfig
+    - f_restic-backup.service
+    - f_restic-backup.timer
+    - f_restic-prune.service
+    - f_restic-prune.timer
+    - f_backup.conf.example
+    - f_at-home.service.example
+    - f_syncthing.service
+    - f_pacman-listing.service
 actions:
   pre:
     spacevim-install: curl -sLf https://spacevim.org/install.sh | bash
