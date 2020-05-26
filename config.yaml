@@ -50,8 +50,14 @@ dotfiles:
   f_zshrc:
     src: zshrc
     dst: ~/.zshrc
+  f_terminalrc:
+    src: config/xfce4/terminal/terminalrc
+    dst: ~/.config/xfce4/terminal/terminalrc
 profiles:
   wasp23:
+    include:
+    - falcon
+  falcon:
     dotfiles:
     - f_bashrc
     - f_init.toml
@@ -66,6 +72,7 @@ profiles:
     - f_syncthing.service
     - f_pacman-listing.service
     - f_zshrc
+    - f_terminalrc
 actions:
   pre:
     spacevim-install: curl -sLf https://spacevim.org/install.sh | bash
