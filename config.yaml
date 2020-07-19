@@ -57,6 +57,9 @@ profiles:
   wasp23:
     include:
     - falcon
+  eagle-arch:
+    include:
+    - falcon
   falcon:
     dotfiles:
     - f_bashrc
