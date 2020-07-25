@@ -60,6 +60,14 @@ profiles:
   eagle-arch:
     include:
     - falcon
+  eagle73:
+    dotfiles:
+    - f_bashrc
+    - f_init.toml
+    - f_dracula.theme
+    - f_gitconfig
+    - f_zshrc
+    - f_terminalrc
   falcon:
     dotfiles:
     - f_bashrc
