@@ -16,11 +16,6 @@ $PACMAN_SYNC zsh
 $PACMAN_SYNC zsh-doc 
 $PACMAN_SYNC zsh-completions
 $PACMAN_SYNC vim
-## Audio
-$PACMAN_SYNC pavucontrol
-$PACMAN_SYNC pulseaudio
-$PACMAN_SYNC pulseaudio_alsa
-$PACMAN_SYNC pulseaudio_equalizer
 
 # Tools
 ## Editors

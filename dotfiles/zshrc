@@ -16,6 +16,6 @@ promptinit
 prompt spaceship
 
 # Aliases
-alias dotdrop=~/dotfiles/dotdrop.sh --cfg=~/dotfiles/config.yaml
+alias dotdrop="~/workspace/dotfiles/dotdrop/dotdrop.sh --cfg=~/workspace/dotfiles/config.yaml"
 alias ls="ls --color"
 

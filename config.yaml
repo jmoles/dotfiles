@@ -11,12 +11,6 @@ dotfiles:
   f_bashrc:
     src: bashrc
     dst: ~/.bashrc
-  f_init.toml:
-    src: SpaceVim.d/init.toml
-    dst: ~/.SpaceVim.d/init.toml
-    actions:
-    - spacevim-install
-    - spacevim
   f_dracula.theme:
     src: local/share/xfce4/terminal/colorschemes/Dracula.theme
     dst: ~/.local/share/xfce4/terminal/colorschemes/Dracula.theme
@@ -57,13 +51,9 @@ profiles:
   wasp23:
     include:
     - falcon
-  eagle-arch:
-    include:
-    - falcon
   eagle73:
     dotfiles:
     - f_bashrc
-    - f_init.toml
     - f_dracula.theme
     - f_gitconfig
     - f_zshrc
@@ -71,7 +61,6 @@ profiles:
   falcon:
     dotfiles:
     - f_bashrc
-    - f_init.toml
     - f_dracula.theme
     - f_gitconfig
     - f_restic-backup.service
