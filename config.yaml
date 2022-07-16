@@ -8,39 +8,12 @@ config:
   link_on_import: nolink
   longkey: false
 dotfiles:
-  f_bashrc:
-    src: bashrc
-    dst: ~/.bashrc
   f_dracula.theme:
     src: local/share/xfce4/terminal/colorschemes/Dracula.theme
     dst: ~/.local/share/xfce4/terminal/colorschemes/Dracula.theme
   f_gitconfig:
     src: gitconfig
     dst: ~/.gitconfig
-  f_restic-backup.service:
-    src: config/systemd/user/restic-backup.service
-    dst: ~/.config/systemd/user/restic-backup.service
-  f_restic-backup.timer:
-    src: config/systemd/user/restic-backup.timer
-    dst: ~/.config/systemd/user/restic-backup.timer
-  f_restic-prune.service:
-    src: config/systemd/user/restic-prune.service
-    dst: ~/.config/systemd/user/restic-prune.service
-  f_restic-prune.timer:
-    src: config/systemd/user/restic-prune.timer
-    dst: ~/.config/systemd/user/restic-prune.timer
-  f_backup.conf.example:
-    src: config/restic/backup.conf.example
-    dst: ~/.config/restic/backup.conf.example
-  f_at-home.service.example:
-    src: config/systemd/user/at-home.service.example
-    dst: ~/.config/systemd/user/at-home.service.example
-  f_syncthing.service:
-    src: config/systemd/user/syncthing.service
-    dst: ~/.config/systemd/user/syncthing.service
-  f_pacman-listing.service:
-    src: config/systemd/user/pacman-listing.service
-    dst: ~/.config/systemd/user/pacman-listing.service
   f_zshrc:
     src: zshrc
     dst: ~/.zshrc
@@ -48,31 +21,10 @@ dotfiles:
     src: config/xfce4/terminal/terminalrc
     dst: ~/.config/xfce4/terminal/terminalrc
 profiles:
-  wasp23:
-    include:
-    - falcon
-  eagle73:
-    dotfiles:
-    - f_bashrc
-    - f_dracula.theme
-    - f_gitconfig
+  mac:
+    dotifles:
     - f_zshrc
-    - f_terminalrc
-  falcon:
-    dotfiles:
-    - f_bashrc
-    - f_dracula.theme
     - f_gitconfig
-    - f_restic-backup.service
-    - f_restic-backup.timer
-    - f_restic-prune.service
-    - f_restic-prune.timer
-    - f_backup.conf.example
-    - f_at-home.service.example
-    - f_syncthing.service
-    - f_pacman-listing.service
-    - f_zshrc
-    - f_terminalrc
 actions:
   pre:
     spacevim-install: curl -sLf https://spacevim.org/install.sh | bash

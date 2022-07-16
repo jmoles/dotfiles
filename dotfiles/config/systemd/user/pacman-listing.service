@@ -1,7 +1,0 @@
-[Unit]
-Description=Dump listing of all installed packages
-
-[Service]
-Type=oneshot
-ExecStart=/bin/sh -c '/usr/bin/pacman -Qqen > ~/.pkglist.txt; /usr/bin/pacman -Qqem > ~/.pkglist_foreign.txt'
-
