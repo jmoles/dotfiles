@@ -4,7 +4,7 @@
 	required = true
 	clean = git-lfs clean -- %f
 [user]
-	email = jmoles@users.noreply.github.com
+	email = josh.moles@gmail.com
 	name = Josh Moles
 	signingkey = 5326658302064616
 [github]
