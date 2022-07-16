@@ -1,3 +1,5 @@
+# {{@@ header() @@}}
+
 # If you come from bash you might have to change your $PATH.
 # export PATH=$HOME/bin:/usr/local/bin:$PATH
 
@@ -101,7 +103,7 @@ source $ZSH/oh-my-zsh.sh
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 
 # Aliases
-alias dotdrop="~/workspace/dotfiles/dotdrop/dotdrop.sh --cfg=~/workspace/dotfiles/config.yaml"
+alias dotdrop="~/workspace/dotfiles/dotdrop/dotdrop.sh -p {{@@ profile @@}} --cfg=~/workspace/dotfiles/config.yaml"
 alias ls="ls --color"
 
 export GPG_TTY=$(tty)

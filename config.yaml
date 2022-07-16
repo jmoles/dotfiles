@@ -22,10 +22,6 @@ dotfiles:
     dst: ~/.config/xfce4/terminal/terminalrc
 profiles:
   mac:
-    dotifles:
+    dotfiles:
     - f_zshrc
     - f_gitconfig
-actions:
-  pre:
-    spacevim-install: curl -sLf https://spacevim.org/install.sh | bash
-  spacevim: vim +PluginInstall +qall
