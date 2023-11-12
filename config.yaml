@@ -8,20 +8,7 @@ config:
   link_on_import: nolink
   longkey: false
 dotfiles:
-  f_dracula.theme:
-    src: local/share/xfce4/terminal/colorschemes/Dracula.theme
-    dst: ~/.local/share/xfce4/terminal/colorschemes/Dracula.theme
   f_gitconfig:
     src: gitconfig
     dst: ~/.gitconfig
-  f_zshrc:
-    src: zshrc
-    dst: ~/.zshrc
-  f_terminalrc:
-    src: config/xfce4/terminal/terminalrc
-    dst: ~/.config/xfce4/terminal/terminalrc
 profiles:
-  mac:
-    dotfiles:
-    - f_zshrc
-    - f_gitconfig
