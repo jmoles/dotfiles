@@ -11,4 +11,14 @@ dotfiles:
   f_gitconfig:
     src: gitconfig
     dst: ~/.gitconfig
+  f_bash_completion:
+    src: bash_completion
+    dst: ~/.bash_completion
+  f_bash_aliases:
+    src: bash_aliases
+    dst: ~/.bash_aliases
 profiles:
+  trout91:
+    dotfiles:
+    - f_bash_completion
+    - f_bash_aliases

@@ -1,0 +1,4 @@
+alias dotdrop="/home/josh/dotfiles/dotdrop.sh --cfg=/home/josh/dotfiles/config.yaml"
+
+alias bee="bean-extract -e ~/personal-accounting/josh.beancount ~/personal-accounting/josh.import"
+complete -F _complete_alias bee
