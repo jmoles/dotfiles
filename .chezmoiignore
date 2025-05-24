@@ -1,7 +1,7 @@
 README.md
 .oh-my-zsh/cache
 {{- if ne .chezmoi.hostname "IONQ-D637" }}
-~/.config/zsh_custom/ionq.zsh
-~/.config/zsh_custom/micromamba.zsh
-~/.config/zsh_custom/nvm.zsh
+.config/zsh_custom/ionq.zsh
+.config/zsh_custom/micromamba.zsh
+.config/zsh_custom/nvm.zsh
 {{- end }}
