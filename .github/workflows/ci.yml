@@ -21,17 +21,16 @@ jobs:
 
       - name: Install chezmoi
         run: |
-          sh -c "$(curl -fsLS get.chezmoi.io)" -- -b $HOME/.local/bin
+          mkdir -p "$HOME/.local/bin"
+          sh -c "$(curl -fsLS get.chezmoi.io)" -- -b "$HOME/.local/bin"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          "$HOME/.local/bin/chezmoi" --version
 
       - name: Verify templates
-        run: |
-          export PATH="$HOME/.local/bin:$PATH"
-          chezmoi verify --source="${{ github.workspace }}"
+        run: chezmoi verify --source="${{ github.workspace }}"
 
       - name: Test apply (dry-run)
-        run: |
-          export PATH="$HOME/.local/bin:$PATH"
-          chezmoi apply --dry-run --source="${{ github.workspace }}"
+        run: chezmoi apply --dry-run --source="${{ github.workspace }}"
 
   shellcheck:
     name: Lint shell scripts
