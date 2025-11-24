@@ -65,13 +65,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install toml-cli
-        run: |
-          pip install toml-cli
-
       - name: Validate TOML files
         run: |
           for file in $(find . -name "*.toml" -type f); do
             echo "Validating $file..."
-            toml get --toml-path "$file" . > /dev/null
+            python3 -c "import tomllib; tomllib.load(open('$file', 'rb'))"
           done
