@@ -1,0 +1,77 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  chezmoi-verify:
+    name: Verify chezmoi (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install chezmoi
+        run: |
+          sh -c "$(curl -fsLS get.chezmoi.io)" -- -b $HOME/.local/bin
+
+      - name: Verify templates
+        run: |
+          export PATH="$HOME/.local/bin:$PATH"
+          chezmoi verify --source="${{ github.workspace }}"
+
+      - name: Test apply (dry-run)
+        run: |
+          export PATH="$HOME/.local/bin:$PATH"
+          chezmoi apply --dry-run --source="${{ github.workspace }}"
+
+  shellcheck:
+    name: Lint shell scripts
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install shellcheck
+        run: sudo apt-get install -y shellcheck
+
+      - name: Run shellcheck
+        run: |
+          # Find all shell scripts and zsh files, excluding templates
+          find . -type f \( -name "*.sh" -o -name "*.zsh" -o -name "dot_zshrc" \) \
+            ! -name "*.tmpl" \
+            -exec shellcheck --shell=bash --severity=warning {} + || true
+
+          # Check zsh custom files
+          if [ -d "dot_config/zsh_custom" ]; then
+            find dot_config/zsh_custom -type f -name "*.zsh" \
+              -exec shellcheck --shell=bash --severity=warning {} + || true
+          fi
+
+  toml-validate:
+    name: Validate TOML files
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install toml-cli
+        run: |
+          pip install toml-cli
+
+      - name: Validate TOML files
+        run: |
+          for file in $(find . -name "*.toml" -type f); do
+            echo "Validating $file..."
+            toml get --toml-path "$file" . > /dev/null
+          done
