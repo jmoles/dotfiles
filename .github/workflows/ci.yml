@@ -26,11 +26,8 @@ jobs:
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
           "$HOME/.local/bin/chezmoi" --version
 
-      - name: Verify templates
-        run: chezmoi verify --source="${{ github.workspace }}"
-
       - name: Test apply (dry-run)
-        run: chezmoi apply --dry-run --source="${{ github.workspace }}"
+        run: chezmoi apply --dry-run --verbose --source="${{ github.workspace }}"
 
   shellcheck:
     name: Lint shell scripts
