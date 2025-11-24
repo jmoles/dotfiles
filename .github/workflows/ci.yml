@@ -20,7 +20,15 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install chezmoi
-        uses: twpayne/setup-chezmoi@v1
+        run: |
+          mkdir -p "$HOME/.local/bin"
+          for i in 1 2 3; do
+            sh -c "$(curl -fsLS get.chezmoi.io)" -- -b "$HOME/.local/bin" && break
+            echo "Attempt $i failed, retrying in 5s..."
+            sleep 5
+          done
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          "$HOME/.local/bin/chezmoi" --version
 
       - name: Test apply (dry-run)
         run: chezmoi apply --dry-run --verbose --source="${{ github.workspace }}"
