@@ -1,0 +1,6 @@
+# Add Visual Studio Code (code)
+{{ if eq .chezmoi.os "darwin" -}}
+export PATH="$PATH:/Applications/Visual Studio Code.app/Contents/Resources/app/bin"
+{{ else if eq .chezmoi.os "linux" -}}
+export PATH="$PATH:/usr/share/code/bin"
+{{ end -}}
