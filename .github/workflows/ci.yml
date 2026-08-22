@@ -57,8 +57,8 @@ jobs:
               -exec shellcheck --shell=bash --severity=warning {} + || true
           fi
 
-  toml-validate:
-    name: Validate TOML files
+  config-validate:
+    name: Validate TOML/JSON files
     runs-on: ubuntu-latest
 
     steps:
@@ -70,4 +70,11 @@ jobs:
           for file in $(find . -name "*.toml" -type f); do
             echo "Validating $file..."
             python3 -c "import tomllib; tomllib.load(open('$file', 'rb'))"
+          done
+
+      - name: Validate JSON files
+        run: |
+          for file in $(find . -name "*.json" -type f ! -path "./.git/*"); do
+            echo "Validating $file..."
+            python3 -m json.tool "$file" > /dev/null
           done
