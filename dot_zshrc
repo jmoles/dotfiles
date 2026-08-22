@@ -76,6 +76,13 @@ source $ZSH/oh-my-zsh.sh
 
 # User configuration
 
+# Show hostname in the right prompt when connected over SSH, so it's always
+# clear which machine a shell belongs to (including after hopping via ssh
+# from inside tmux). Hidden on local (non-SSH) shells.
+if [[ -n "$SSH_CONNECTION" ]]; then
+  RPROMPT='%F{yellow}%m%f'
+fi
+
 # Fix ls colors
 export LS_COLORS="di=1;96:ln=1;35:ex=1;32:so=1;33:pi=33:bd=34;46:cd=34;43:su=30;41:sg=30;46:tw=30;42:ow=30;42"
 
