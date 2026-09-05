@@ -1,6 +1,14 @@
 {
+  "permissions": {
+    "ask": [
+      "Bash(git *)",
+      "Bash(gh *)"
+    ]
+  },
   "enabledPlugins": {
     "clangd-lsp@claude-plugins-official": true
   },
-  "tui": "fullscreen"
+  "tui": "fullscreen",
+  "theme": "dark",
+  "agentPushNotifEnabled": true
 }
