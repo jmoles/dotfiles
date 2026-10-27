@@ -1,0 +1,73 @@
+#!/bin/sh
+# Installs the tools these dotfiles reference. run_onchange_ (not run_once_)
+# so that editing the package lists below re-runs it on the next apply.
+# "before" so 1Password exists before the gitconfig/ssh config that
+# depend on it are written.
+set -eu
+
+{{ if eq .chezmoi.os "darwin" -}}
+# Xcode CLT provides git and clangd (/usr/bin/clangd shim), and Homebrew
+# needs it anyway. macOS also ships the tmux-256color terminfo entry.
+if ! xcode-select -p >/dev/null 2>&1; then
+    xcode-select --install
+    echo "Finish the Xcode Command Line Tools installer, then re-run 'chezmoi apply'." >&2
+    exit 1
+fi
+
+if ! command -v brew >/dev/null 2>&1; then
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+fi
+# A fresh Homebrew install isn't on PATH yet in this shell.
+for b in /opt/homebrew/bin/brew /usr/local/bin/brew; do
+    if [ -x "$b" ]; then
+        eval "$("$b" shellenv)"
+        break
+    fi
+done
+
+brew install git-lfs tmux
+# brew refuses to install a cask over an app installed by other means
+# (e.g. the 1Password website download), which would abort the apply.
+if [ ! -d /Applications/1Password.app ]; then
+    brew install --cask 1password
+fi
+if ! command -v op >/dev/null 2>&1; then
+    brew install --cask 1password-cli
+fi
+
+{{ else if eq .chezmoi.os "linux" -}}
+if ! command -v dnf >/dev/null 2>&1; then
+    echo "install-prereqs: only dnf-based distros (Fedora/RHEL) are supported." >&2
+    exit 1
+fi
+
+# Repo setup per https://support.1password.com/install-linux/ (RPM section).
+if [ ! -f /etc/yum.repos.d/1password.repo ]; then
+    sudo rpm --import https://downloads.1password.com/linux/keys/1password.asc
+    sudo tee /etc/yum.repos.d/1password.repo >/dev/null <<'EOF'
+[1password]
+name=1Password Stable Channel
+baseurl=https://downloads.1password.com/linux/rpm/stable/$basearch
+enabled=1
+gpgcheck=1
+repo_gpgcheck=1
+gpgkey=https://downloads.1password.com/linux/keys/1password.asc
+EOF
+fi
+
+pkgs="curl git git-lfs zsh vim-enhanced tmux clang-tools-extra 1password-cli"
+# The desktop app is what provides op-ssh-sign and the SSH agent; on a
+# headless host it can't run, so signing/agent won't work there regardless.
+# Checking for an enabled display manager rather than $DISPLAY (apply is often
+# run over SSH) or the default target (desktops may boot to multi-user.target
+# and start GDM on demand). Enabling any DM creates this alias symlink.
+if [ -e /etc/systemd/system/display-manager.service ]; then
+    pkgs="$pkgs 1password"
+fi
+# shellcheck disable=SC2086 # intentional word splitting of the package list
+sudo dnf install -y $pkgs
+
+{{ end -}}
+if ! infocmp tmux-256color >/dev/null 2>&1; then
+    echo "install-prereqs: tmux-256color terminfo not found; tmux.conf's default-terminal will misbehave." >&2
+fi
