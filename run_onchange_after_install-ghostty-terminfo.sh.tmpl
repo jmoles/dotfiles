@@ -1,0 +1,16 @@
+#!/bin/sh
+# Remote hosts (e.g. AlmaLinux 9's ncurses 6.2) predate xterm-ghostty, so
+# tmux/vim refuse to start over SSH from Ghostty without a local entry.
+# The source is inlined rather than deployed so chezmoi never has to manage
+# ~/.local/share, whose mode differs between hosts. run_onchange_ re-runs
+# this whenever terminfo/xterm-ghostty.terminfo changes.
+set -e
+infocmp xterm-ghostty >/dev/null 2>&1 && exit 0   # already known, e.g. on the Mac
+tmp=$(mktemp)
+trap 'rm -f "$tmp"' EXIT
+cat > "$tmp" <<'TERMINFO'
+{{ include "terminfo/xterm-ghostty.terminfo" -}}
+TERMINFO
+# The warning is about tic versions older than any we run; it isn't actionable.
+tic -x -o "$HOME/.terminfo" "$tmp" 2>&1 | grep -v 'description field as an alias' >&2 || true
+infocmp xterm-ghostty >/dev/null
