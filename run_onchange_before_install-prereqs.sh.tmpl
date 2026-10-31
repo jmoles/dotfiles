@@ -34,6 +34,9 @@ fi
 if ! command -v op >/dev/null 2>&1; then
     brew install --cask 1password-cli
 fi
+if [ ! -d /Applications/Ghostty.app ]; then
+    brew install --cask ghostty
+fi
 
 {{ else if eq .chezmoi.os "linux" -}}
 if ! command -v dnf >/dev/null 2>&1; then

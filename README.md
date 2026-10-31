@@ -31,6 +31,7 @@ script changes, and needs `sudo` on Linux and admin rights on macOS.
 | vim | git `core.editor` | built in | `vim-enhanced` |
 | tmux + `tmux-256color` terminfo | `.tmux.conf` | Homebrew; terminfo built in | `tmux` |
 | clangd | Claude Code `clangd-lsp` plugin | Xcode CLT | `clang-tools-extra` |
+| [Ghostty](https://ghostty.org/) | `~/.config/ghostty` | Homebrew cask | not installed; see Optional |
 | curl | setup | built in | `curl` |
 
 Also:
@@ -64,6 +65,11 @@ breaks without them.
 - Go (`~/go/bin`)
 - Ruby gems in `~/gems` (`GEM_HOME`)
 - Visual Studio Code (`code` on `PATH`)
+- Ghostty on Linux (config is deployed regardless). Every host gets the
+  `xterm-ghostty` terminfo in `~/.terminfo`, so SSH from Ghostty works
+  without it.
+- Per-machine Ghostty overrides in `~/.config/ghostty/local.ghostty`
+  (not managed by chezmoi)
 - AMD Vitis 2026.1 at `/opt/xilinx/2026.1` (`xilinx-env` alias)
 
 ## CI

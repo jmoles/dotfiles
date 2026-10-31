@@ -3,9 +3,10 @@
 # tmux/vim refuse to start over SSH from Ghostty without a local entry.
 # The source is inlined rather than deployed so chezmoi never has to manage
 # ~/.local/share, whose mode differs between hosts. run_onchange_ re-runs
-# this whenever terminfo/xterm-ghostty.terminfo changes.
+# this whenever terminfo/xterm-ghostty.terminfo changes. It always compiles:
+# skipping when infocmp already knows xterm-ghostty would also skip a copy
+# this script installed earlier, so an updated entry would never land.
 set -e
-infocmp xterm-ghostty >/dev/null 2>&1 && exit 0   # already known, e.g. on the Mac
 tmp=$(mktemp)
 trap 'rm -f "$tmp"' EXIT
 cat > "$tmp" <<'TERMINFO'
