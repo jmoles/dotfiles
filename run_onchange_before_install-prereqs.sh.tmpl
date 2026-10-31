@@ -55,7 +55,9 @@ gpgkey=https://downloads.1password.com/linux/keys/1password.asc
 EOF
 fi
 
-pkgs="curl git git-lfs zsh vim-enhanced tmux clang-tools-extra 1password-cli"
+# util-linux-user provides chsh on EL9; on Fedora it's a virtual provide of
+# util-linux, so listing it is a no-op there.
+pkgs="curl git git-lfs zsh vim-enhanced tmux clang-tools-extra util-linux-user 1password-cli"
 # The desktop app is what provides op-ssh-sign and the SSH agent; on a
 # headless host it can't run, so signing/agent won't work there regardless.
 # Checking for an enabled display manager rather than $DISPLAY (apply is often
@@ -66,6 +68,19 @@ if [ -e /etc/systemd/system/display-manager.service ]; then
 fi
 # shellcheck disable=SC2086 # intentional word splitting of the package list
 sudo dnf install -y $pkgs
+
+# chsh as the user (prompts for their password) rather than sudo usermod:
+# changing your own shell shouldn't need root. chsh only edits /etc/passwd,
+# so directory accounts (SSSD/LDAP) are reported rather than attempted.
+zsh_path="$(command -v zsh)"
+if [ "$(getent passwd "$USER" | cut -d: -f7)" != "$zsh_path" ]; then
+    if grep -q "^$USER:" /etc/passwd; then
+        chsh -s "$zsh_path"
+        echo "install-prereqs: login shell set to $zsh_path; takes effect on next login."
+    else
+        echo "install-prereqs: $USER is not a local account; set the login shell to $zsh_path via your directory service." >&2
+    fi
+fi
 
 {{ end -}}
 if ! infocmp tmux-256color >/dev/null 2>&1; then
