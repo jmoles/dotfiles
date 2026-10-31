@@ -72,6 +72,14 @@ breaks without them.
   (not managed by chezmoi)
 - AMD Vitis 2026.1 at `/opt/xilinx/2026.1` (`xilinx-env` alias)
 
+## Claude Code settings
+
+Claude Code writes `~/.claude/settings.json` itself, so chezmoi doesn't own
+the file. [`modify_private_settings.json`](dot_claude/modify_private_settings.json)
+merges a few keys into whatever is there on each apply and leaves the rest
+local. Those keys win over local edits; `permissions.ask` is merged, not
+replaced.
+
 ## CI
 
 GitHub Actions runs `chezmoi apply --dry-run` on macOS and Ubuntu,

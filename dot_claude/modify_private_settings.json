@@ -1,0 +1,18 @@
+{{- /* chezmoi:modify-template */ -}}
+{{- /*
+  Claude Code rewrites this file itself (plugins, autoMode, model settings),
+  and some of what it writes is machine-specific or private. So instead of
+  owning the file, merge only the keys below into whatever is already there.
+  permissions.ask is unioned so locally added rules survive.
+*/ -}}
+{{- $s := dict -}}
+{{- if .chezmoi.stdin -}}
+{{-   $s = fromJson .chezmoi.stdin -}}
+{{- end -}}
+{{- $ask := dig "permissions" "ask" list $s | concat (list "Bash(git *)" "Bash(gh *)") | uniq -}}
+{{- $s = setValueAtPath "permissions.ask" $ask $s -}}
+{{- $s = setValueAtPath "enabledPlugins.clangd-lsp@claude-plugins-official" true $s -}}
+{{- $s = setValueAtPath "tui" "fullscreen" $s -}}
+{{- $s = setValueAtPath "theme" "dark" $s -}}
+{{- $s = setValueAtPath "agentPushNotifEnabled" true $s -}}
+{{- toPrettyJson $s }}

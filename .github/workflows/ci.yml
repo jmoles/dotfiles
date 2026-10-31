@@ -74,7 +74,8 @@ jobs:
 
       - name: Validate JSON files
         run: |
-          for file in $(find . -name "*.json" -type f ! -path "./.git/*"); do
+          # modify_ files are chezmoi templates that output JSON, not JSON.
+          for file in $(find . -name "*.json" -type f ! -path "./.git/*" ! -name "modify_*"); do
             echo "Validating $file..."
             python3 -m json.tool "$file" > /dev/null
           done
