@@ -1,0 +1,3 @@
+# Trust store for `git log --show-signature` / verify-commit. Keep the key in
+# sync with user.signingkey in dot_gitconfig.tmpl.
+2448063+jmoles@users.noreply.github.com namespaces="git" ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKWXDakMlZm6oulB8DpgS+0FuZIit2lqgQw8bL6JAVgm

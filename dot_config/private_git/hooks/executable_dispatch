@@ -1,0 +1,88 @@
+#!/bin/sh
+# Global hook dispatcher (core.hooksPath points at this directory; every hook
+# name here is a symlink to this script).
+#
+# A global core.hooksPath *replaces* each repo's $GIT_DIR/hooks instead of
+# adding to it, so without this hand-off a repo's own hooks silently stop
+# running. git-lfs also installs into core.hooksPath once it's set, and
+# refuses to overwrite these links, so its hooks are invoked from here too.
+#
+# Deliberately not linked: push-to-checkout (its mere presence replaces
+# git's built-in updateInstead logic), reference-transaction (runs on every
+# ref update and a non-zero exit aborts it, so any bug here would break all
+# of git), fsmonitor-watchman (configured by path, not looked up here).
+set -eu
+
+name=$(basename "$0")
+self_dir=$(cd "$(dirname "$0")" && pwd -P)
+
+if [ "$name" = pre-commit ]; then
+    if command -v betterleaks >/dev/null 2>&1; then
+        # --redact keeps any hit out of terminal scrollback; --verbose at warn
+        # level is silent on clean commits but shows file/line on a hit.
+        # Never add --validation: it sends findings to third-party APIs.
+        # Leaks get their own exit code because betterleaks also exits 1 on
+        # fatal errors (e.g. a malformed .gitleaks.toml).
+        rc=0
+        betterleaks git --pre-commit --staged --redact --no-banner \
+            --log-level warn --verbose --exit-code 99 . || rc=$?
+        if [ "$rc" -eq 99 ]; then
+            echo "pre-commit: betterleaks flagged staged changes; commit blocked." >&2
+            echo "pre-commit: false positive? allowlist it in .gitleaksignore/.gitleaks.toml, or commit with --no-verify." >&2
+            exit 1
+        elif [ "$rc" -ne 0 ]; then
+            # Fail closed: an unscanned commit is exactly what this guards against.
+            echo "pre-commit: betterleaks failed (exit $rc); commit blocked. Bypass once with --no-verify." >&2
+            exit "$rc"
+        fi
+    else
+        echo "pre-commit: WARNING: betterleaks not installed; staged changes were NOT scanned for secrets." >&2
+    fi
+fi
+
+# rev-parse can fail mid-`git init`/clone before HEAD exists; a repo that
+# isn't resolvable yet has no hooks of its own, and failing here would abort
+# the git operation that invoked us.
+if common_dir=$(git rev-parse --git-common-dir 2>/dev/null); then
+    local_hook=$common_dir/hooks/$name
+else
+    local_hook=
+fi
+if [ -n "$local_hook" ] && [ -x "$local_hook" ] &&
+    [ "$(cd "$(dirname "$local_hook")" && pwd -P)" != "$self_dir" ]; then
+    :
+else
+    # Missing, not executable, or $GIT_DIR/hooks is itself linked to this
+    # directory (which would recurse forever).
+    local_hook=
+fi
+
+case $name in
+    pre-push | post-checkout | post-commit | post-merge)
+        # A local hook that already calls git-lfs (the stub `git lfs install`
+        # writes when core.hooksPath is unset) handles LFS itself; running
+        # LFS here too would push objects twice.
+        if [ -n "$local_hook" ] && grep -q "git lfs $name" "$local_hook"; then
+            exec "$local_hook" "$@"
+        fi
+        if command -v git-lfs >/dev/null 2>&1; then
+            if [ -n "$local_hook" ] && [ "$name" = pre-push ]; then
+                # pre-push gets the ref list on stdin; both consumers need it.
+                refs=$(mktemp)
+                trap 'rm -f "$refs"' EXIT
+                cat >"$refs"
+                git lfs "$name" "$@" <"$refs"
+                "$local_hook" "$@" <"$refs"
+                exit
+            fi
+            if [ -z "$local_hook" ]; then
+                exec git lfs "$name" "$@"
+            fi
+            git lfs "$name" "$@"
+        fi
+        ;;
+esac
+
+if [ -n "$local_hook" ]; then
+    exec "$local_hook" "$@"
+fi

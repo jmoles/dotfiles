@@ -9,16 +9,18 @@
   format = ssh
 
 [gpg "ssh"]
+  allowedSignersFile = ~/.config/git/allowed_signers
 {{- if eq .chezmoi.os "darwin" }}
   program = /Applications/1Password.app/Contents/MacOS/op-ssh-sign
-{{- else if eq .chezmoi.os "linux" }}
-  program = "/opt/1Password/op-ssh-sign"
 {{- end }}
 
 [commit]
   gpgsign = true
 [core]
 	editor = vim
+	# Global dispatcher: secret scan on pre-commit, then hands off to the
+	# repo's own hooks and git-lfs (see ~/.config/git/hooks/dispatch).
+	hooksPath = ~/.config/git/hooks
 [push]
 	autoSetupRemote = true
 [init]

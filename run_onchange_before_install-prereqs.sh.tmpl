@@ -25,7 +25,7 @@ for b in /opt/homebrew/bin/brew /usr/local/bin/brew; do
     fi
 done
 
-brew install git-lfs tmux
+brew install git-lfs tmux betterleaks
 # brew refuses to install a cask over an app installed by other means
 # (e.g. the 1Password website download), which would abort the apply.
 if [ ! -d /Applications/1Password.app ]; then
@@ -60,7 +60,7 @@ fi
 
 # util-linux-user provides chsh on EL9; on Fedora it's a virtual provide of
 # util-linux, so listing it is a no-op there.
-pkgs="curl git git-lfs zsh vim-enhanced tmux clang-tools-extra util-linux-user 1password-cli"
+pkgs="curl git git-lfs zsh vim-enhanced tmux clang-tools-extra util-linux-user 1password-cli betterleaks"
 # The desktop app is what provides op-ssh-sign and the SSH agent; on a
 # headless host it can't run, so signing/agent won't work there regardless.
 # Checking for an enabled display manager rather than $DISPLAY (apply is often

@@ -33,6 +33,22 @@ jobs:
       - name: Test apply (dry-run)
         run: chezmoi apply --dry-run --verbose --source="${{ github.workspace }}"
 
+  secret-scan:
+    name: Scan for secrets
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # Full history: anything ever pushed to this public repo is exposed.
+          fetch-depth: 0
+
+      - name: gitleaks
+        uses: gitleaks/gitleaks-action@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   shellcheck:
     name: Lint shell scripts
     runs-on: ubuntu-latest

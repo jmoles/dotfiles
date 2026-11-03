@@ -3,3 +3,9 @@ README.md
 
 # Source for run_onchange_after_install-ghostty-terminfo.sh; compiled, not deployed.
 terminfo
+
+# Encrypted host list: skip on machines without the age identity (e.g.
+# headless hosts) so apply doesn't fail trying to decrypt it.
+{{- if not (stat (joinPath .chezmoi.homeDir ".config/chezmoi/key.txt")) }}
+.ssh/config.d
+{{- end }}

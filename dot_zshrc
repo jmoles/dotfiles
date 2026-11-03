@@ -83,6 +83,17 @@ if [[ -n "$SSH_CONNECTION" ]]; then
   PROMPT='%F{yellow}%m%f '"$PROMPT"
 fi
 
+# SSH agent selection. Over SSH with a forwarded agent, use it so signing and
+# auth prompts go to the machine I'm sitting at; the stable symlink keeps tmux
+# panes working after the SSH session that started them is gone. Locally on a
+# Linux desktop, use 1Password's agent (macOS is handled by IdentityAgent).
+if [[ -n "$SSH_CONNECTION" && -S "${SSH_AUTH_SOCK:-}" && "$SSH_AUTH_SOCK" != "$HOME/.ssh/agent.sock" ]]; then
+  ln -sfn "$SSH_AUTH_SOCK" "$HOME/.ssh/agent.sock"
+  export SSH_AUTH_SOCK="$HOME/.ssh/agent.sock"
+elif [[ -z "$SSH_CONNECTION" && -S "$HOME/.1password/agent.sock" ]]; then
+  export SSH_AUTH_SOCK="$HOME/.1password/agent.sock"
+fi
+
 # Fix ls colors
 export LS_COLORS="di=1;96:ln=1;35:ex=1;32:so=1;33:pi=33:bd=34;46:cd=34;43:su=30;41:sg=30;46:tw=30;42:ow=30;42"
 

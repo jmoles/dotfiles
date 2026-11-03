@@ -4,3 +4,16 @@
 .Trashes
 .fseventsd
 .AppleDouble
+
+# Key material must never land in this public repo, even by accident.
+key.txt
+*.agekey
+.env
+.env.*
+*.pem
+*.key
+id_*
+!id_*.pub
+# Only ciphertext belongs next to the encrypted host config.
+private_dot_ssh/private_config.d/*
+!private_dot_ssh/private_config.d/encrypted_*

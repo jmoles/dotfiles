@@ -1,0 +1,7 @@
+# Only host-specific SSH config is encrypted; the identity lives in 1Password
+# and is placed by hand on client machines (see README).
+encryption = "age"
+
+[age]
+  identity = "{{ .chezmoi.homeDir }}/.config/chezmoi/key.txt"
+  recipient = "age1zunkv437ayvqkcx6kls9kv3u20h33x8sm722h2y69jpsyzz9ksaqru08y0"
