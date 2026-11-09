@@ -11,6 +11,19 @@
 {{- end -}}
 {{- $ask := dig "permissions" "ask" list $s | concat (list "Bash(git *)" "Bash(gh *)") | uniq -}}
 {{- $s = setValueAtPath "permissions.ask" $ask $s -}}
+{{- /* Register the git guard without clobbering other PreToolUse hooks. */ -}}
+{{- $guard := "$HOME/.claude/hooks/pre-tool-git-guard.sh" -}}
+{{- $pre := dig "hooks" "PreToolUse" list $s -}}
+{{- $have := false -}}
+{{- range $pre -}}
+{{-   range (dig "hooks" list .) -}}
+{{-     if eq (dig "command" "" .) $guard -}}{{- $have = true -}}{{- end -}}
+{{-   end -}}
+{{- end -}}
+{{- if not $have -}}
+{{-   $pre = append $pre (dict "matcher" "Bash" "hooks" (list (dict "type" "command" "command" $guard))) -}}
+{{- end -}}
+{{- $s = setValueAtPath "hooks.PreToolUse" $pre $s -}}
 {{- $s = setValueAtPath "enabledPlugins.clangd-lsp@claude-plugins-official" true $s -}}
 {{- $s = setValueAtPath "tui" "fullscreen" $s -}}
 {{- $s = setValueAtPath "theme" "dark" $s -}}

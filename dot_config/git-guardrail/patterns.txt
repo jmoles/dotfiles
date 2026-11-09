@@ -1,0 +1,23 @@
+# git
+##  Push operations
+^push.*(--force|-f)
+^push
+
+## History and tree mutations
+^reset.*(--hard)
+^clean.*(-f|-d)
+^rebase
+^branch.*(-D|--delete)
+
+## Bulk unstaging / discarding edits
+^checkout.*\s+\.
+^restore.*\s+\.
+
+# gh
+## --- GitHub CLI (gh) Patterns ---
+^gh[[:space:]]+repo[[:space:]]+(delete|archive)
+^gh[[:space:]]+pr[[:space:]]+(merge|close)
+^gh[[:space:]]+release[[:space:]]+(delete|create)
+^gh[[:space:]]+secret
+^gh[[:space:]]+auth[[:space:]]+(login|logout|refresh|setup-git|switch|token)
+^gh[[:space:]]+ssh-key

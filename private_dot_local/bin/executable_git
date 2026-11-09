@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+set -eo pipefail
+
+LIB="$HOME/.config/git-guardrail/lib.sh"
+if [[ ! -r "$LIB" ]]; then
+  echo "[GUARDRAIL] $LIB missing; git is running UNGUARDED" >&2
+  for p in /usr/bin/git /opt/homebrew/bin/git /usr/local/bin/git; do
+    [[ -x "$p" ]] && exec "$p" "$@"
+  done
+  exit 127
+fi
+# shellcheck source=/dev/null
+source "$LIB"
+
+REAL_GIT="$(guardrail_find_real git "$0")" || {
+  echo "[GUARDRAIL] no real git found in PATH" >&2
+  exit 127
+}
+
+# Humans and non-AI automation get plain git.
+guardrail_is_agent || exec "$REAL_GIT" "$@"
+
+# Match against the subcommand with global options removed, so -C/-c/--no-pager
+# can't be used to sidestep a rule.
+SUB="$(guardrail_git_normalize "$@")"
+
+while IFS= read -r pattern; do
+  # gh rules belong to the gh wrapper.
+  [[ "$pattern" =~ ^\^gh ]] && continue
+  re="$(guardrail_ere "$pattern")"
+  if [[ "$pattern" =~ ^\^git ]]; then
+    subject="git $SUB"
+  else
+    subject="$SUB"
+  fi
+  if [[ "$subject" =~ $re ]]; then
+    guardrail_block git "git $*" "$pattern"
+    exit 126
+  fi
+done < <(guardrail_patterns)
+
+exec "$REAL_GIT" "$@"

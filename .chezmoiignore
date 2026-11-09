@@ -9,3 +9,24 @@ terminfo
 {{- if not (stat (joinPath .chezmoi.homeDir ".config/chezmoi/key.txt")) }}
 .ssh/config.d
 {{- end }}
+
+{{- /*
+  Skip a git/gh guardrail wrapper when the real tool isn't installed. A
+  wrapper with nothing behind it would still answer `command -v gh`, fooling
+  scripts that probe for the tool. Checks fixed install locations rather than
+  PATH, because PATH finds the wrapper itself first. This runs before the
+  prereqs script, so on a brand-new host the wrapper arrives on the second
+  apply.
+*/}}
+{{- $have := dict "git" false "gh" false }}
+{{- range $tool := list "git" "gh" }}
+{{-   range $dir := list "/opt/homebrew/bin" "/usr/local/bin" "/usr/bin" "/home/linuxbrew/.linuxbrew/bin" }}
+{{-     if stat (joinPath $dir $tool) }}{{ $_ := set $have $tool true }}{{ end }}
+{{-   end }}
+{{- end }}
+{{- if not $have.git }}
+.local/bin/git
+{{- end }}
+{{- if not $have.gh }}
+.local/bin/gh
+{{- end }}

@@ -30,6 +30,8 @@ script changes, and needs `sudo` on Linux and admin rights on macOS.
 | 1Password CLI (`op`) | Oh My Zsh `1password` plugin | Homebrew cask | `1password-cli` |
 | vim | git `core.editor` | built in | `vim-enhanced` |
 | [betterleaks](https://github.com/betterleaks/betterleaks) | global git `pre-commit` secret scan | Homebrew | `betterleaks` |
+| jq | Claude Code guard hook (parses the tool call) | Homebrew | `jq` |
+| gh | GitHub CLI; the `gh` guardrail wrapper is skipped if absent | Homebrew | `gh` (a warning, not an error, if your repos lack it) |
 | tmux + `tmux-256color` terminfo | `.tmux.conf` | Homebrew; terminfo built in | `tmux` |
 | clangd | Claude Code `clangd-lsp` plugin | Xcode CLT | `clang-tools-extra` |
 | [Ghostty](https://ghostty.org/) | `~/.config/ghostty` | Homebrew cask | not installed; see Optional |
@@ -114,6 +116,52 @@ Limits:
 - Rebases and cherry-picks don't run `pre-commit`.
 
 CI also runs gitleaks over this repo's full history.
+
+## AI-tool git and gh guardrails
+
+These rules apply to AI coding sessions (Claude Code), not to your own
+terminal, cron, chezmoi or deploy scripts. Destructive or outward-facing
+commands are blocked there: pushes, `reset --hard`, `rebase`, `clean -f`,
+`branch -D`, `checkout .` / `restore .`, and `gh` repo delete/archive, PR
+merge/close, release create/delete, secrets, ssh-keys and `gh auth` login-type
+commands. The rules live in
+[`~/.config/git-guardrail/patterns.txt`](dot_config/git-guardrail/patterns.txt).
+Bare rules like `^push` are git subcommands; rules starting `^gh` are `gh`.
+
+Two layers read that file:
+
+- A Claude Code `PreToolUse` hook
+  ([`pre-tool-git-guard.sh`](dot_claude/hooks/executable_pre-tool-git-guard.sh)),
+  registered by the `settings.json` merge. It rejects the command with exit 2,
+  the only code Claude Code treats as blocking.
+- `git` and `gh` wrappers in `~/.local/bin` (ahead of the real binaries on
+  `PATH`) that enforce the same rules for any AI tool that runs them.
+
+The wrappers only enforce when `CLAUDECODE` or `AI_AGENT` is set (Claude Code
+sets both), or `GUARDRAIL_AGENT=1` is exported. For another AI tool, export
+`GUARDRAIL_AGENT=1` from that tool's own config. Set `GUARDRAIL_OFF=1` to
+bypass them explicitly. Without any of those, they hand straight off to the
+real binary. The hook only ever sees Claude Code, and it also honors
+`GUARDRAIL_OFF=1`, but only from the environment Claude Code was launched with
+(for a trusted unattended host, `GUARDRAIL_OFF=1 claude -p ...`). Setting it
+inline inside a session has no effect on the hook.
+
+The wrappers are skipped on a host where the real `git` or `gh` isn't
+installed ([`.chezmoiignore`](.chezmoiignore) checks the usual install
+paths). If the tool lives somewhere else, the wrapper is skipped and that tool
+runs unguarded. The hook fails closed when it has neither `jq` nor `python3`.
+
+Limits:
+
+- This is a seatbelt against mistakes, not a security boundary. A session can
+  unset the variables or call `/usr/bin/git` directly, and the hook matches
+  command text, so obfuscated commands (`g''it push`, a script that runs it)
+  get past it. `echo git push` is a false positive. Use credential gating
+  (1Password-approved signing and SSH) and GitHub rulesets for anything that
+  must hold.
+- `gh api` is not guarded.
+- If `lib.sh` is missing, the wrappers warn and run unguarded (so a broken
+  install can't take `git` down), while the hook blocks every Bash call in Claude Code until it's restored.
 
 ## Optional
 

@@ -25,7 +25,8 @@ for b in /opt/homebrew/bin/brew /usr/local/bin/brew; do
     fi
 done
 
-brew install git-lfs tmux betterleaks
+# jq parses the Claude Code guard hook's input; gh is wrapped by the guardrails.
+brew install git-lfs tmux betterleaks jq gh
 # brew refuses to install a cask over an app installed by other means
 # (e.g. the 1Password website download), which would abort the apply.
 if [ ! -d /Applications/1Password.app ]; then
@@ -60,7 +61,7 @@ fi
 
 # util-linux-user provides chsh on EL9; on Fedora it's a virtual provide of
 # util-linux, so listing it is a no-op there.
-pkgs="curl git git-lfs zsh vim-enhanced tmux clang-tools-extra util-linux-user 1password-cli betterleaks"
+pkgs="curl git git-lfs zsh vim-enhanced tmux clang-tools-extra util-linux-user 1password-cli betterleaks jq"
 # The desktop app is what provides op-ssh-sign and the SSH agent; on a
 # headless host it can't run, so signing/agent won't work there regardless.
 # Checking for an enabled display manager rather than $DISPLAY (apply is often
@@ -71,6 +72,15 @@ if [ -e /etc/systemd/system/display-manager.service ]; then
 fi
 # shellcheck disable=SC2086 # intentional word splitting of the package list
 sudo dnf install -y $pkgs
+
+# gh is in Fedora's repos but may not be in EL9's. It's optional: without it
+# the gh guardrail wrapper is skipped (see .chezmoiignore). Warn rather than
+# abort the whole apply.
+if ! command -v gh >/dev/null 2>&1; then
+    if ! sudo dnf install -y gh; then
+        echo "install-prereqs: gh is not available from the enabled repos; install it from https://cli.github.com/ and re-run 'chezmoi apply'." >&2
+    fi
+fi
 
 # chsh as the user (prompts for their password) rather than sudo usermod:
 # changing your own shell shouldn't need root. chsh only edits /etc/passwd,
