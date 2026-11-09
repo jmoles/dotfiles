@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+set -eo pipefail
+
+LIB="$HOME/.config/git-guardrail/lib.sh"
+if [[ ! -r "$LIB" ]]; then
+  echo "[GUARDRAIL] $LIB missing; gh is running UNGUARDED" >&2
+  for p in /opt/homebrew/bin/gh /usr/local/bin/gh /usr/bin/gh; do
+    [[ -x "$p" ]] && exec "$p" "$@"
+  done
+  exit 127
+fi
+# shellcheck source=/dev/null
+source "$LIB"
+
+REAL_GH="$(guardrail_find_real gh "$0")" || {
+  echo "[GUARDRAIL] no real gh found in PATH" >&2
+  exit 127
+}
+
+# Humans and non-AI automation get plain gh.
+guardrail_is_agent || exec "$REAL_GH" "$@"
+
+# Only `^gh...` rules apply here; bare rules are git subcommands and would
+# otherwise block read-only gh commands such as `gh status`.
+SUBJECT="gh $(guardrail_gh_normalize "$@")"
+
+while IFS= read -r pattern; do
+  [[ "$pattern" =~ ^\^gh ]] || continue
+  re="$(guardrail_ere "$pattern")"
+  # SUBJECT drops flags so `gh pr --repo x merge` still reads as `pr merge`;
+  # the raw string keeps them, which the `gh api -X DELETE` rules need.
+  if [[ "$SUBJECT" =~ $re || "gh $*" =~ $re ]]; then
+    guardrail_block gh "gh $*" "$pattern"
+    exit 126
+  fi
+done < <(guardrail_patterns)
+
+exec "$REAL_GH" "$@"

@@ -9,8 +9,96 @@
 {{- if .chezmoi.stdin -}}
 {{-   $s = fromJson .chezmoi.stdin -}}
 {{- end -}}
-{{- $ask := dig "permissions" "ask" list $s | concat (list "Bash(git *)" "Bash(gh *)") | uniq -}}
+{{- /*
+  ask beats allow, so a blanket ask on `git *` would override the read-only
+  allows below and prompt for every `git log`. Drop it, and the same for
+  `gh *` (also from settings written by earlier versions of this file) and
+  ask only where it matters: commits, `gh api`, and gh's mutating verbs
+  below. Everything else not allowed here falls back to the normal prompt.
+  The guardrail hook still blocks destructive commands. Verb lists are from
+  `gh <group> --help` (gh 2.103.3); a verb added by a newer gh isn't listed
+  and just gets the normal prompt.
+*/ -}}
+{{- $ghAsk := dict
+  "pr" (list "create" "checkout" "close" "comment" "edit" "lock" "merge" "ready" "reopen" "revert" "review" "unlock" "update-branch")
+  "issue" (list "create" "close" "comment" "delete" "develop" "edit" "lock" "pin" "reopen" "transfer" "unlock" "unpin")
+  "run" (list "cancel" "delete" "download" "rerun")
+  "workflow" (list "disable" "enable" "run")
+  "repo" (list "create" "archive" "autolink" "clone" "delete" "deploy-key" "edit" "fork" "rename" "set-default" "sync" "unarchive")
+  "release" (list "create" "delete" "delete-asset" "download" "edit" "upload")
+  "gist" (list "clone" "create" "delete" "edit" "rename")
+  "label" (list "clone" "create" "delete" "edit")
+  "cache" (list "delete")
+  "variable" (list "delete" "set")
+  "project" (list "close" "copy" "create" "delete" "edit" "field-create" "field-delete" "item-add" "item-archive" "item-create" "item-delete" "item-edit" "link" "mark-template" "unlink")
+  "codespace" (list "code" "cp" "create" "delete" "edit" "jupyter" "ports" "rebuild" "ssh" "stop")
+  "extension" (list "browse" "create" "exec" "install" "remove" "upgrade")
+  "alias" (list "delete" "import" "set")
+  "config" (list "clear-cache" "set")
+  "discussion" (list "create" "comment" "edit")
+  "agent-task" (list "create")
+  "skill" (list "install" "publish" "update")
+  "gpg-key" (list "add" "delete")
+-}}
+{{- $ask := without (dig "permissions" "ask" list $s) "Bash(git *)" "Bash(gh *)" | concat (list "Bash(git commit)" "Bash(git commit *)" "Bash(gh api)" "Bash(gh api *)" "Bash(gh co)" "Bash(gh co *)") -}}
+{{- range $group, $verbs := $ghAsk -}}
+{{-   range $verbs -}}
+{{-     $ask = concat $ask (list (printf "Bash(gh %s %s)" $group .) (printf "Bash(gh %s %s *)" $group .)) -}}
+{{-   end -}}
+{{- end -}}
+{{- $ask = uniq $ask -}}
 {{- $s = setValueAtPath "permissions.ask" $ask $s -}}
+{{- /* Read-only git; both forms because `x *` may not match bare `x`. */ -}}
+{{- $allow := dig "permissions" "allow" list $s -}}
+{{- range list "status" "log" "diff" "show" "blame" "rev-parse" "ls-files" "describe" "shortlog" -}}
+{{-   $allow = concat $allow (list (printf "Bash(git %s)" .) (printf "Bash(git %s *)" .)) -}}
+{{- end -}}
+{{- $allow = concat $allow (list "Bash(git branch --show-current)" "Bash(git branch -vv)" "Bash(git branch -a)" "Bash(git stash list)" "Bash(git remote -v)") -}}
+{{- /* Read-only gh. `gh api` is excluded: it can mutate. */ -}}
+{{- $ghRead := dict
+  "pr" (list "list" "status" "checks" "diff" "view")
+  "issue" (list "list" "status" "view")
+  "run" (list "list" "view" "watch")
+  "workflow" (list "list" "view")
+  "repo" (list "list" "view" "gitignore" "license" "read-dir" "read-file")
+  "release" (list "list" "view" "verify" "verify-asset")
+  "gist" (list "list" "view")
+  "label" (list "list")
+  "cache" (list "list")
+  "variable" (list "list" "get")
+  "ruleset" (list "check" "list" "view")
+  "project" (list "list" "view" "field-list" "item-list")
+  "org" (list "list")
+  "codespace" (list "list" "view" "logs")
+  "extension" (list "list" "search")
+  "alias" (list "list")
+  "config" (list "get" "list")
+  "search" (list "code" "commits" "issues" "prs" "repos")
+  "discussion" (list "list" "view")
+  "skill" (list "list" "search" "preview")
+  "agent-task" (list "list" "view")
+  "attestation" (list "verify" "trusted-root")
+-}}
+{{- range $group, $verbs := $ghRead -}}
+{{-   range $verbs -}}
+{{-     $allow = concat $allow (list (printf "Bash(gh %s %s)" $group .) (printf "Bash(gh %s %s *)" $group .)) -}}
+{{-   end -}}
+{{- end -}}
+{{- $allow = concat $allow (list "Bash(gh status)" "Bash(gh auth status)" "Bash(gh auth status *)" "Bash(gh --version)" "Bash(gh licenses)" "Bash(gh completion *)") | uniq -}}
+{{- $s = setValueAtPath "permissions.allow" $allow $s -}}
+{{- /* Register the git guard without clobbering other PreToolUse hooks. */ -}}
+{{- $guard := "$HOME/.claude/hooks/pre-tool-git-guard.sh" -}}
+{{- $pre := dig "hooks" "PreToolUse" list $s -}}
+{{- $have := false -}}
+{{- range $pre -}}
+{{-   range (dig "hooks" list .) -}}
+{{-     if eq (dig "command" "" .) $guard -}}{{- $have = true -}}{{- end -}}
+{{-   end -}}
+{{- end -}}
+{{- if not $have -}}
+{{-   $pre = append $pre (dict "matcher" "Bash" "hooks" (list (dict "type" "command" "command" $guard))) -}}
+{{- end -}}
+{{- $s = setValueAtPath "hooks.PreToolUse" $pre $s -}}
 {{- $s = setValueAtPath "enabledPlugins.clangd-lsp@claude-plugins-official" true $s -}}
 {{- $s = setValueAtPath "tui" "fullscreen" $s -}}
 {{- $s = setValueAtPath "theme" "dark" $s -}}

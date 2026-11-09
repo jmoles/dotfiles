@@ -1,0 +1,45 @@
+# git
+##  Push operations
+^push.*(--force|-f)
+^push
+
+## History and tree mutations
+^reset.*(--hard)
+^clean.*(-f|-d)
+^rebase
+^branch.*(-D|--delete)
+
+## Bulk unstaging / discarding edits
+^checkout.*\s+\.
+^restore.*\s+\.
+
+# gh
+## --- GitHub CLI (gh) Patterns ---
+^gh[[:space:]]+repo[[:space:]]+(delete|archive)
+^gh[[:space:]]+pr[[:space:]]+(merge|close)
+^gh[[:space:]]+release[[:space:]]+(delete|create)
+^gh[[:space:]]+secret
+^gh[[:space:]]+auth[[:space:]]+(login|logout|refresh|setup-git|switch|token)
+^gh[[:space:]]+ssh-key
+^gh[[:space:]]+gpg-key
+
+## gh: escalation and code execution
+## repo edit can flip visibility to public; extensions/skills run third-party
+## code; aliases can be shell commands.
+^gh[[:space:]]+repo[[:space:]]+(edit|rename|unarchive|deploy-key|autolink)
+^gh[[:space:]]+(extension|skill)[[:space:]]+(install|upgrade|update|exec|publish|create|remove)
+^gh[[:space:]]+alias[[:space:]]+(set|import|delete)
+
+## gh: destructive or outward-facing verbs
+^gh[[:space:]]+issue[[:space:]]+delete
+^gh[[:space:]]+release[[:space:]]+(edit|upload|delete-asset)
+^gh[[:space:]]+variable[[:space:]]+(set|delete)
+^gh[[:space:]]+workflow[[:space:]]+(run|enable|disable)
+^gh[[:space:]]+run[[:space:]]+(cancel|delete|rerun)
+^gh[[:space:]]+cache[[:space:]]+delete
+^gh[[:space:]]+(gist|project|label|codespace)[[:space:]]+delete
+
+## gh api: any write. A method override, or fields/input (which imply POST).
+## The wrapper matches these against the raw arguments; GET stays allowed.
+^gh[[:space:]]+api[[:space:]].*(-X|--method)[[:space:]=]*([Pp][Oo][Ss][Tt]|[Pp][Uu][Tt]|[Pp][Aa][Tt][Cc][Hh]|[Dd][Ee][Ll][Ee][Tt][Ee])
+^gh[[:space:]]+api[[:space:]].*[[:space:]](-f|-F|--field|--raw-field|--input)([[:space:]=]|$)
