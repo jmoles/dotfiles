@@ -122,9 +122,11 @@ CI also runs gitleaks over this repo's full history.
 These rules apply to AI coding sessions (Claude Code), not to your own
 terminal, cron, chezmoi or deploy scripts. Destructive or outward-facing
 commands are blocked there: pushes, `reset --hard`, `rebase`, `clean -f`,
-`branch -D`, `checkout .` / `restore .`, and `gh` repo delete/archive, PR
-merge/close, release create/delete, secrets, ssh-keys and `gh auth` login-type
-commands. The rules live in
+`branch -D`, `checkout .` / `restore .`, and for `gh`: repo
+delete/archive/edit/rename, PR merge/close, release writes, secrets, ssh/gpg
+keys, `gh auth` login-type commands, extensions, skills and aliases (they run
+third-party code or shell), workflow/run/cache/variable writes, and `gh api`
+with a write method or fields. The rules live in
 [`~/.config/git-guardrail/patterns.txt`](dot_config/git-guardrail/patterns.txt).
 Bare rules like `^push` are git subcommands; rules starting `^gh` are `gh`.
 
@@ -159,9 +161,38 @@ Limits:
   get past it. `echo git push` is a false positive. Use credential gating
   (1Password-approved signing and SSH) and GitHub rulesets for anything that
   must hold.
-- `gh api` is not guarded.
+- `gh api` writes (`-X POST|PUT|PATCH|DELETE`, `-f`/`-F`/`--field`/`--input`)
+  are blocked and GET is allowed, but anything outside `git`/`gh` (`curl` with
+  a token, a script) is not covered.
 - If `lib.sh` is missing, the wrappers warn and run unguarded (so a broken
   install can't take `git` down), while the hook blocks every Bash call in Claude Code until it's restored.
+
+### Permission prompts
+
+The `settings.json` merge also manages `permissions`. Read-only commands
+(`git status|log|diff|show|blame`, `gh pr|issue|run|... view|list`, ...) run
+without a prompt; `git commit`, `gh api` and every mutating `gh` verb ask.
+There is deliberately no blanket `Bash(git *)` or `Bash(gh *)` ask: an `ask`
+rule beats an `allow` rule, so it would prompt for every `git log`. The `gh`
+verb lists come from `gh <group> --help`; a verb added by a newer `gh` just
+gets the normal prompt.
+
+### Tests
+
+```sh
+bash tests/guardrail-test.sh     # hook + wrappers against patterns.txt
+bash tests/permissions-test.sh   # renders the settings template (needs chezmoi)
+```
+
+Both build a throwaway `HOME` from the checkout and use stub `git`/`gh`, so
+there's no network and no real command runs. CI runs them on Linux and macOS.
+The permission test also checks that no `allow` rule is one the hook blocks.
+Neither can check how Claude Code itself matches a rule against a command: after
+applying, `gh pr list` should run without a prompt and `gh pr create` should ask.
+
+To dry-run the whole repo without a TTY (what CI does), skip the age-encrypted
+host file, which otherwise prompts if your local copy has drifted:
+`chezmoi apply --dry-run --source "$PWD" --exclude=encrypted,externals`
 
 ## Optional
 

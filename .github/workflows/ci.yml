@@ -60,18 +60,53 @@ jobs:
       - name: Install shellcheck
         run: sudo apt-get install -y shellcheck
 
-      - name: Run shellcheck
+      - name: Run shellcheck (bash scripts; fails the build)
         run: |
-          # Find all shell scripts and zsh files, excluding templates
-          find . -type f \( -name "*.sh" -o -name "*.zsh" -o -name "dot_zshrc" \) \
-            ! -name "*.tmpl" \
+          # The git/gh wrappers have no .sh extension, so list them explicitly.
+          # Templates are excluded: they aren't valid shell until rendered.
+          find . -type f -name "*.sh" ! -name "*.tmpl" -not -path './.git/*' \
+            -exec shellcheck --shell=bash --severity=warning {} +
+          shellcheck --shell=bash --severity=warning \
+            private_dot_local/bin/executable_git \
+            private_dot_local/bin/executable_gh
+
+      - name: Run shellcheck (zsh files; advisory)
+        # zsh isn't bash, and Oh My Zsh variables (ZSH_THEME, plugins, ...)
+        # look unused to shellcheck, so findings here don't fail the build.
+        run: |
+          find . -type f \( -name "*.zsh" -o -name "dot_zshrc" \) ! -name "*.tmpl" \
+            -not -path './.git/*' \
             -exec shellcheck --shell=bash --severity=warning {} + || true
 
-          # Check zsh custom files
-          if [ -d "dot_config/zsh_custom" ]; then
-            find dot_config/zsh_custom -type f -name "*.zsh" \
-              -exec shellcheck --shell=bash --severity=warning {} + || true
-          fi
+  guardrail-tests:
+    name: Guardrail tests (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install chezmoi
+        run: |
+          mkdir -p "$HOME/.local/bin"
+          for i in 1 2 3; do
+            sh -c "$(curl -fsLS get.chezmoi.io)" -- -b "$HOME/.local/bin" && break
+            echo "Attempt $i failed, retrying in 5s..."
+            sleep 5
+          done
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      # Hermetic: stub git/gh, throwaway HOME, no network. Covers the hook,
+      # the wrappers, and the permission rules the settings template emits.
+      - name: Hook and wrapper tests
+        run: bash tests/guardrail-test.sh
+
+      - name: Permission rule tests
+        run: bash tests/permissions-test.sh
 
   config-validate:
     name: Validate TOML/JSON files

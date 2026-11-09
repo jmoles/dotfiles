@@ -43,12 +43,17 @@ source "$LIB"
 BOUNDARY='(^|[^[:alnum:]_.-])'
 GIT_OPTS='(-[Cc][[:space:]]+[^[:space:]]+|--(git-dir|work-tree|namespace|super-prefix|config-env|attr-source)[[:space:]]+[^[:space:]]+|-[^[:space:]]+)'
 GIT_RE="${BOUNDARY}git([[:space:]]+${GIT_OPTS})*[[:space:]]+"
+# Whitespace that may also contain flags (with an optional value), so
+# `gh pr --repo o/r merge` still matches `gh pr merge`. The optional value
+# can't hide the verb: ERE matching succeeds if any split of the tokens works.
+SEP='([[:space:]]+-[^[:space:]]+([[:space:]]+[^-[:space:]][^[:space:]]*)?)*[[:space:]]+'
 
 while IFS= read -r pattern; do
   body="$(guardrail_ere "$pattern")"
   if [[ "$pattern" =~ ^\^(git|gh)([^a-zA-Z0-9_-]|$) ]]; then
     # Explicit tool rule. Drop the anchor so chained commands
     # (cd x && gh pr merge) still match.
+    body="${body//\[\[:space:\]\]+/$SEP}"
     HOOK_PATTERN="${BOUNDARY}${body#^}"
   else
     # Bare subcommand rule (e.g. ^push) applies to git.

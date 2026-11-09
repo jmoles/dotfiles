@@ -27,7 +27,9 @@ SUBJECT="gh $(guardrail_gh_normalize "$@")"
 while IFS= read -r pattern; do
   [[ "$pattern" =~ ^\^gh ]] || continue
   re="$(guardrail_ere "$pattern")"
-  if [[ "$SUBJECT" =~ $re ]]; then
+  # SUBJECT drops flags so `gh pr --repo x merge` still reads as `pr merge`;
+  # the raw string keeps them, which the `gh api -X DELETE` rules need.
+  if [[ "$SUBJECT" =~ $re || "gh $*" =~ $re ]]; then
     guardrail_block gh "gh $*" "$pattern"
     exit 126
   fi

@@ -1,6 +1,9 @@
 README.md
 .oh-my-zsh/cache
 
+# Tests for the guardrails; run from the checkout, not deployed.
+tests
+
 # Source for run_onchange_after_install-ghostty-terminfo.sh; compiled, not deployed.
 terminfo
 
