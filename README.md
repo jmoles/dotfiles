@@ -56,10 +56,12 @@ Also:
    is required) and SSH has no keys.
 2. Log out and back in so the new login shell takes effect (Linux).
 
-On headless Linux hosts only the CLI is installed. Commit signing and the
-SSH agent work there only through a forwarded agent (see below).
+On headless Linux hosts only the CLI is installed. They have no signing key
+or SSH agent: commit and sign on the Mac and send the work over (see below).
+A Linux machine you sit at that runs the 1Password desktop app uses its
+agent locally.
 
-## SSH agent forwarding and per-host config
+## Per-host SSH config and remote workflow
 
 Host-specific SSH config lives in
 [`private_dot_ssh/private_config.d/encrypted_private_hosts.age`](private_dot_ssh/private_config.d/),
@@ -67,14 +69,15 @@ encrypted with age so host details aren't published with this repo
 (names committed before this change are still in git history). Edit it with
 `chezmoi edit ~/.ssh/config.d/hosts`.
 
-Hosts opt in to `ForwardAgent yes` there. On those hosts, git signs with
-`ssh-keygen` through the forwarded agent, so the 1Password approval prompt
-shows up on the machine you're SSHing from. Signatures verify locally
-(`git log --show-signature`) against
+Agent forwarding is intentionally not used: it was fragile, and anyone with
+root on a forwarded host can use your agent while you're connected. Instead,
+commit and sign on the Mac, then send the work to the remote by pushing to
+it over SSH (signatures are preserved) or with `rsync` for uncommitted
+changes. Remotes build and test only; a commit there fails because signing
+is required and no key is available, which is the intent. Signatures verify
+locally (`git log --show-signature`) against
 [`~/.config/git/allowed_signers`](dot_config/private_git/allowed_signers),
-whose key must match `user.signingkey`. Anyone with root on a forwarded
-host can use your agent while you're connected, so only opt in hosts you
-control.
+whose key must match `user.signingkey`.
 
 To decrypt on a machine you SSH from:
 
