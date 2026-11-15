@@ -2,10 +2,12 @@
 # `ghostty +show-config --default --docs` for everything else.
 
 # Hosts that run chezmoi get the terminfo from
-# run_onchange_after_install-ghostty-terminfo.sh. ssh-terminfo covers the
-# ones that don't, and ssh-env falls back to xterm-256color where tic is
-# missing. sudo keeps TERM usable under sudo.
-shell-integration-features = sudo,ssh-env,ssh-terminfo
+# run_onchange_after_install-ghostty-terminfo.sh. ssh-env and ssh-terminfo
+# are deliberately off: ssh-terminfo runs tic on the remote on each local
+# cache miss, which is slow and noisy, and ssh-env would override TERM with
+# xterm-256color. Hosts without the entry get a per-host SetEnv in
+# ~/.ssh/config instead. sudo keeps TERM usable under sudo.
+shell-integration-features = sudo
 
 # Follow the system light/dark setting. Pick names with `ghostty +list-themes`.
 # theme = light:<name>,dark:<name>
