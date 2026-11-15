@@ -84,8 +84,9 @@ if [[ -n "$SSH_CONNECTION" ]]; then
 fi
 
 # On a Linux desktop, use 1Password's agent. macOS is handled by
-# IdentityAgent in ssh config. Remote (SSH) shells deliberately get no agent:
-# commits are signed on the Mac and pushed over, never signed remotely.
+# IdentityAgent in ssh config. Remote (SSH) shells use whatever agent sshd
+# forwarded (only from the Mac, and only to the host that opts in); ~/.ssh/rc
+# keeps a stable symlink to it for tmux.
 if [[ -z "$SSH_CONNECTION" && -S "$HOME/.1password/agent.sock" ]]; then
   export SSH_AUTH_SOCK="$HOME/.1password/agent.sock"
 fi

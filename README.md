@@ -57,7 +57,9 @@ Also:
 2. Log out and back in so the new login shell takes effect (Linux).
 
 On headless Linux hosts only the CLI is installed. They have no signing key
-or SSH agent: commit and sign on the Mac and send the work over (see below).
+or local SSH agent: either sign over a forwarded agent from the Mac (only for
+the host that opts in, see below) or commit and sign on the Mac and send the
+work over.
 A Linux machine you sit at that runs the 1Password desktop app uses its
 agent locally.
 
@@ -69,12 +71,16 @@ encrypted with age so host details aren't published with this repo
 (names committed before this change are still in git history). Edit it with
 `chezmoi edit ~/.ssh/config.d/hosts`.
 
-Agent forwarding is intentionally not used: it was fragile, and anyone with
-root on a forwarded host can use your agent while you're connected. Instead,
-commit and sign on the Mac, then send the work to the remote by pushing to
-it over SSH (signatures are preserved) or with `rsync` for uncommitted
-changes. Remotes build and test only; a commit there fails because signing
-is required and no key is available, which is the intent. Signatures verify
+Agent forwarding is off globally (`ForwardAgent no` in `Host *`) and enabled
+only for the one host that needs to sign commits, via its block in the
+encrypted hosts file. Anyone with root on a forwarded host can use your agent
+while you're connected (1Password prompts per use), so keep it to a single
+host. That host signs with `ssh-keygen -Y sign` over the forwarded
+`$SSH_AUTH_SOCK`, with no 1Password install; `~/.ssh/rc` keeps a stable
+`~/.ssh/ssh_auth_sock` symlink and tmux points at it so old panes survive
+reconnects. Every other remote has no key: commit and sign on the Mac, then
+push to it over SSH (signatures are preserved) or `rsync` uncommitted
+changes; a commit there fails because signing is required. Signatures verify
 locally (`git log --show-signature`) against
 [`~/.config/git/allowed_signers`](dot_config/private_git/allowed_signers),
 whose key must match `user.signingkey`.
@@ -87,6 +93,28 @@ To decrypt on a machine you SSH from:
 
 Machines without `key.txt` skip the encrypted file
 ([`.chezmoiignore`](.chezmoiignore)), so headless hosts apply cleanly.
+
+### Rotating the signing key (yearly)
+
+The key lives in 1Password and is referenced as a public key in two places
+that must stay in sync. Nothing else (including the forwarded agent and the
+remote host) needs to change, because the agent serves whatever key 1Password
+holds.
+
+1. In [`dot_gitconfig.tmpl`](dot_gitconfig.tmpl), set `user.signingkey` to
+   the new public key.
+2. In [`dot_config/private_git/allowed_signers`](dot_config/private_git/allowed_signers),
+   add the new key as the **first** entry and keep the old one below it
+   (comment it as retired). Removing the old key makes older commits show as
+   unverified.
+3. Add the new public key to GitHub/GitLab as a **signing** key (separate
+   from any authentication key), and keep the old one there for the same
+   reason.
+4. If the SSH auth key also rotates, update `authorized_keys` on every
+   remote, including the forwarding host.
+5. `chezmoi apply` on the Mac, then on each remote that signs (the forwarding
+   host). Check with `git commit --allow-empty -m test` and
+   `git log --show-signature -1`.
 
 ## Global git hooks and secret scanning
 

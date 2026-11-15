@@ -1,0 +1,18 @@
+#!/bin/sh
+# Runs on the server at each SSH login, before the shell. Point a stable
+# symlink at this session's forwarded agent socket so long-lived tmux panes
+# keep working after the connection that started them is gone (the socket
+# path changes on every login).
+if [ -S "$SSH_AUTH_SOCK" ] && [ "$SSH_AUTH_SOCK" != "$HOME/.ssh/ssh_auth_sock" ]; then
+	ln -sfn "$SSH_AUTH_SOCK" "$HOME/.ssh/ssh_auth_sock"
+fi
+
+# Having an rc file disables sshd's default X11 cookie setup (sshd(8),
+# SSHRC), so redo it or X11 forwarding would silently break.
+if read -r proto cookie && [ -n "$DISPLAY" ]; then
+	if [ "$(echo "$DISPLAY" | cut -c1-9)" = "localhost" ]; then
+		echo add unix:"$(echo "$DISPLAY" | cut -c11-)" "$proto" "$cookie"
+	else
+		echo add "$DISPLAY" "$proto" "$cookie"
+	fi | xauth -q -
+fi
