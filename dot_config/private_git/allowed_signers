@@ -1,3 +1,7 @@
-# Trust store for `git log --show-signature` / verify-commit. Keep the key in
-# sync with user.signingkey in dot_gitconfig.tmpl.
-2448063+jmoles@users.noreply.github.com namespaces="git" ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKWXDakMlZm6oulB8DpgS+0FuZIit2lqgQw8bL6JAVgm
+# Trust store for `git log --show-signature` / verify-commit. The first key
+# must match user.signingkey in dot_gitconfig.tmpl. The principal is "*" on
+# purpose: this file lists only my own keys, so which email a commit carries
+# doesn't matter, and no real email has to live in this public repo.
+* namespaces="git" ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHF8PLIs7i30ykw0VXmBJtxbPjl2pysz1eHv4SSsQosM
+# Retired by yearly rotation but still valid: kept so older commits verify.
+* namespaces="git" ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKWXDakMlZm6oulB8DpgS+0FuZIit2lqgQw8bL6JAVgm

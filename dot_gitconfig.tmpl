@@ -3,10 +3,26 @@
 	name = Josh Moles
 
 [user]
-  signingkey = ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKWXDakMlZm6oulB8DpgS+0FuZIit2lqgQw8bL6JAVgm
+  signingkey = ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHF8PLIs7i30ykw0VXmBJtxbPjl2pysz1eHv4SSsQosM
 
 [gpg]
   format = ssh
+
+# GitHub
+[includeIf "hasconfig:remote.*.url:https://github.com/**"]
+    path = ~/.gitconfig-github
+[includeIf "hasconfig:remote.*.url:git@github.com:*/**"]
+    path = ~/.gitconfig-github
+[includeIf "hasconfig:remote.*.url:ssh://git@github.com/**"]
+    path = ~/.gitconfig-github
+
+# GitLab
+[includeIf "hasconfig:remote.*.url:https://gitlab.com/**"]
+    path = ~/.gitconfig-gitlab
+[includeIf "hasconfig:remote.*.url:git@gitlab.com:*/**"]
+    path = ~/.gitconfig-gitlab
+[includeIf "hasconfig:remote.*.url:ssh://git@gitlab.com/**"]
+    path = ~/.gitconfig-gitlab
 
 [gpg "ssh"]
   allowedSignersFile = ~/.config/git/allowed_signers
