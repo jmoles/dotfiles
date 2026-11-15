@@ -9,9 +9,7 @@ Host *
 	ForwardAgent no
 	ForwardX11 no
 	ForwardX11Trusted no
-	# TERM is left alone, so remotes get xterm-ghostty. Every host that runs
-	# chezmoi has the entry in ~/.terminfo (see
-	# run_onchange_after_install-ghostty-terminfo.sh.tmpl). For a host that
-	# doesn't, add this to its Host block in config.d (OpenSSH 8.7+):
-	#   SetEnv TERM=xterm-256color
+	# Remotes mostly lack the xterm-ghostty terminfo entry, and tmux/vim refuse
+	# to start without one. xterm-256color exists everywhere (OpenSSH 8.7+).
+	SetEnv TERM=xterm-256color
 

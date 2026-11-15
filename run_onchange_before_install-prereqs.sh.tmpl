@@ -7,33 +7,26 @@ set -eu
 
 {{ if eq .chezmoi.os "darwin" -}}
 # Xcode CLT provides git and clangd (/usr/bin/clangd shim), and Homebrew
-# needs it anyway. macOS also ships the tmux-256color terminfo entry.
+# needs it anyway. macOS also ships the tmux-256color terminfo entry (tmux itself is not installed).
 if ! xcode-select -p >/dev/null 2>&1; then
     xcode-select --install
     echo "Finish the Xcode Command Line Tools installer, then re-run 'chezmoi apply'." >&2
     exit 1
 fi
 
+# Homebrew is not installed for you: that would pipe an unpinned script from
+# the network into bash. Install it from https://brew.sh first.
 if ! command -v brew >/dev/null 2>&1; then
-    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    echo "install-prereqs: Homebrew not found; install it from https://brew.sh, then re-run 'chezmoi apply'." >&2
+    exit 1
 fi
-# A fresh Homebrew install isn't on PATH yet in this shell.
-for b in /opt/homebrew/bin/brew /usr/local/bin/brew; do
-    if [ -x "$b" ]; then
-        eval "$("$b" shellenv)"
-        break
-    fi
-done
 
 # jq parses the Claude Code guard hook's input; gh is wrapped by the guardrails.
-brew install git-lfs tmux betterleaks jq gh
+brew install git-lfs betterleaks jq gh
 # brew refuses to install a cask over an app installed by other means
 # (e.g. the 1Password website download), which would abort the apply.
 if [ ! -d /Applications/1Password.app ]; then
     brew install --cask 1password
-fi
-if ! command -v op >/dev/null 2>&1; then
-    brew install --cask 1password-cli
 fi
 if [ ! -d /Applications/Ghostty.app ]; then
     brew install --cask ghostty

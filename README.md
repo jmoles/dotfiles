@@ -31,12 +31,11 @@ rights). On **Linux chezmoi installs nothing**: no dnf, no repos, no `sudo`, no
 | zsh (5.8+) | `.zshrc` (plain zsh, no framework or plugins) | built in | `zsh`, set as login shell |
 | git, git-lfs | `.gitconfig` (LFS filter is `required`) | Xcode CLT, Homebrew | `git`, `git-lfs` |
 | 1Password app | commit signing (`op-ssh-sign`), SSH agent | Homebrew cask | not installed: remote hosts sign over the forwarded Mac agent with `ssh-keygen -Y sign` |
-| 1Password CLI (`op`) | optional; nothing in the shell config depends on it | Homebrew cask | not needed |
 | vim | git `core.editor` | built in | `vim` |
 | [betterleaks](https://github.com/betterleaks/betterleaks) | global git `pre-commit` secret scan | Homebrew | `betterleaks` |
 | jq | Claude Code guard hook (parses the tool call) | Homebrew | `jq` |
 | gh | GitHub CLI; the `gh` guardrail wrapper is skipped if absent | Homebrew | `gh` (optional) |
-| tmux + `tmux-256color` terminfo | `.tmux.conf` | Homebrew; terminfo built in | `tmux` (3.0+), terminfo entry |
+| tmux + `tmux-256color` terminfo | `.tmux.conf` | not installed (terminfo built in) | `tmux` (3.0+), terminfo entry |
 | clangd | Claude Code `clangd-lsp` plugin | Xcode CLT | `clang-tools-extra` |
 | [Ghostty](https://ghostty.org/) | `~/.config/ghostty` | Homebrew cask | not installed; see Optional |
 | curl | setup | built in | `curl` |
@@ -50,7 +49,8 @@ Also:
   `~/.cache/oh-my-zsh` behind unused; delete them by hand.
 - macOS: on a fresh machine the first apply starts the Xcode Command Line
   Tools installer and stops. Finish it, then run `chezmoi apply` again.
-  Homebrew is installed if missing.
+  Homebrew must already be installed (<https://brew.sh>); the script stops
+  with a message if it isn't.
 
 ## Manual steps
 
@@ -235,14 +235,9 @@ breaks without them.
 
 - Rust via [rustup](https://rustup.rs/) (`~/.cargo/bin`)
 - Go (`~/go/bin`)
-- Ruby gems in `~/gems` (`GEM_HOME`)
-- Visual Studio Code (`code` on `PATH`)
-- Ghostty on Linux (config is deployed regardless). Every host gets the
-  `xterm-ghostty` terminfo in `~/.terminfo`, so SSH from Ghostty works
-  without it.
+- Ghostty on Linux (config is deployed regardless)
 - Per-machine Ghostty overrides in `~/.config/ghostty/local.ghostty`
   (not managed by chezmoi)
-- AMD Vitis 2026.1 at `/opt/xilinx/2026.1` (`xilinx-env` alias)
 
 ## Claude Code settings
 

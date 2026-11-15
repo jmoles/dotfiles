@@ -44,10 +44,15 @@ jobs:
           # Full history: anything ever pushed to this public repo is exposed.
           fetch-depth: 0
 
-      - name: gitleaks
-        uses: gitleaks/gitleaks-action@v3
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # Same scanner as the local pre-commit hook, so one allowlist syntax.
+      - name: Install betterleaks
+        run: |
+          eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+          brew install betterleaks
+          echo "$(brew --prefix)/bin" >> "$GITHUB_PATH"
+
+      - name: betterleaks
+        run: betterleaks git --no-banner --redact --log-level warn --verbose .
 
   shellcheck:
     name: Lint shell scripts
