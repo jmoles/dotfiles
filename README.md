@@ -4,7 +4,9 @@ My dotfiles, managed with [chezmoi](https://www.chezmoi.io/).
 
 ## Setup
 
-Supported: macOS and dnf-based Linux (tested on Fedora 43 and AlmaLinux 9).
+Supported: macOS and Linux (tested on Fedora 43 and AlmaLinux 9). chezmoi
+installs packages on macOS only; on Linux provision them first (see
+Prerequisites).
 
 ```sh
 # chezmoi not installed yet:
@@ -19,35 +21,35 @@ Afterwards, update with `chezmoi update`.
 ## Prerequisites
 
 [`run_onchange_before_install-prereqs.sh.tmpl`](run_onchange_before_install-prereqs.sh.tmpl)
-installs these before any dotfiles are written. It re-runs only when the
-script changes, and needs `sudo` on Linux and admin rights on macOS.
+installs packages on **macOS only** (Homebrew, formulae and casks; needs admin
+rights). On **Linux chezmoi installs nothing**: no dnf, no repos, no `sudo`, no
+`chsh`. Provision the packages below with Ansible (or by hand) before
+`chezmoi apply`.
 
-| Tool | Used by | macOS | Fedora/RHEL (dnf) |
+| Tool | Used by | macOS (installed by script) | Linux (you provide) |
 | --- | --- | --- | --- |
-| zsh + [Oh My Zsh](https://ohmyz.sh/) | `.zshrc` | built in | `zsh`; login shell set via `chsh` |
+| zsh + [Oh My Zsh](https://ohmyz.sh/) | `.zshrc` | built in | `zsh`, set as login shell |
 | git, git-lfs | `.gitconfig` (LFS filter is `required`) | Xcode CLT, Homebrew | `git`, `git-lfs` |
-| 1Password app | commit signing (`op-ssh-sign` on macOS, `ssh-keygen` on Linux), SSH agent | Homebrew cask | `1password`, only if a display manager is enabled |
-| 1Password CLI (`op`) | Oh My Zsh `1password` plugin | Homebrew cask | `1password-cli` |
-| vim | git `core.editor` | built in | `vim-enhanced` |
+| 1Password app | commit signing (`op-ssh-sign`), SSH agent | Homebrew cask | not installed: remote hosts sign over the forwarded Mac agent with `ssh-keygen -Y sign` |
+| 1Password CLI (`op`) | Oh My Zsh `1password` plugin (no-op if absent) | Homebrew cask | not needed |
+| vim | git `core.editor` | built in | `vim` |
 | [betterleaks](https://github.com/betterleaks/betterleaks) | global git `pre-commit` secret scan | Homebrew | `betterleaks` |
 | jq | Claude Code guard hook (parses the tool call) | Homebrew | `jq` |
-| gh | GitHub CLI; the `gh` guardrail wrapper is skipped if absent | Homebrew | `gh` (a warning, not an error, if your repos lack it) |
-| tmux + `tmux-256color` terminfo | `.tmux.conf` | Homebrew; terminfo built in | `tmux` |
+| gh | GitHub CLI; the `gh` guardrail wrapper is skipped if absent | Homebrew | `gh` (optional) |
+| tmux + `tmux-256color` terminfo | `.tmux.conf` | Homebrew; terminfo built in | `tmux` (3.0+), terminfo entry |
 | clangd | Claude Code `clangd-lsp` plugin | Xcode CLT | `clang-tools-extra` |
 | [Ghostty](https://ghostty.org/) | `~/.config/ghostty` | Homebrew cask | not installed; see Optional |
 | curl | setup | built in | `curl` |
+
+The script warns (it does not install) if `tmux-256color` terminfo is missing.
 
 Also:
 
 - Oh My Zsh is pulled by chezmoi itself
   ([`.chezmoiexternal.toml`](.chezmoiexternal.toml)), refreshed weekly.
-- On Linux, the 1Password dnf repo is added if missing. `util-linux-user` is
-  installed for `chsh` on EL9.
 - macOS: on a fresh machine the first apply starts the Xcode Command Line
   Tools installer and stops. Finish it, then run `chezmoi apply` again.
   Homebrew is installed if missing.
-- Linux without dnf: the script exits with an error. Install the tools
-  above by hand.
 
 ## Manual steps
 

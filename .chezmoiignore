@@ -17,9 +17,9 @@ terminfo
   Skip a git/gh guardrail wrapper when the real tool isn't installed. A
   wrapper with nothing behind it would still answer `command -v gh`, fooling
   scripts that probe for the tool. Checks fixed install locations rather than
-  PATH, because PATH finds the wrapper itself first. This runs before the
-  prereqs script, so on a brand-new host the wrapper arrives on the second
-  apply.
+  PATH, because PATH finds the wrapper itself first. On macOS this runs before
+  the prereqs script, so on a brand-new host the wrapper arrives on the second
+  apply; on Linux the tool must already be installed (nothing installs it).
 */}}
 {{- $have := dict "git" false "gh" false }}
 {{- range $tool := list "git" "gh" }}
