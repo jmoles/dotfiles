@@ -1,5 +1,4 @@
 README.md
-.oh-my-zsh/cache
 
 # Tests for the guardrails; run from the checkout, not deployed.
 tests

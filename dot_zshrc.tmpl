@@ -1,0 +1,112 @@
+# Plain zsh config: no framework, no plugin manager, nothing fetched or
+# executed from the network at startup. Written for zsh >= 5.8 (EL9 ships 5.8).
+
+export PATH=$HOME/bin:$HOME/.local/bin:/usr/local/bin:$PATH
+
+# Set before the completion zstyle below expands it (GNU ls and completion
+# list-colors; BSD ls ignores it).
+export LS_COLORS="di=1;96:ln=1;35:ex=1;32:so=1;33:pi=33:bd=34;46:cd=34;43:su=30;41:sg=30;46:tw=30;42:ow=30;42"
+
+# Personal snippets (PATH additions, aliases). OMZ used to source these
+# implicitly via $ZSH_CUSTOM; do it explicitly. (N) = no error if none match.
+for f in "$HOME"/.config/zsh_custom/*.zsh(N); do source "$f"; done
+unset f
+
+# --- History ---------------------------------------------------------------
+HISTFILE=$HOME/.zsh_history
+HISTSIZE=50000
+SAVEHIST=50000
+setopt SHARE_HISTORY          # import and append history on every command, so sessions see each other
+setopt HIST_IGNORE_DUPS       # don't record a command identical to the previous one
+setopt HIST_IGNORE_SPACE      # a leading space keeps a command (e.g. with a secret) out of history
+setopt HIST_REDUCE_BLANKS     # strip superfluous whitespace before saving
+setopt HIST_VERIFY            # show the expansion of !! / !$ before running it
+
+# --- Navigation / globbing -------------------------------------------------
+setopt AUTO_CD                # typing a directory name cd's into it
+setopt AUTO_PUSHD PUSHD_IGNORE_DUPS  # cd feeds the dir stack; `cd -N` / `dirs -v` work
+setopt NUMERIC_GLOB_SORT      # file10 sorts after file9 in glob results
+setopt INTERACTIVE_COMMENTS   # allow # comments at the prompt
+setopt NO_BEEP
+unsetopt FLOW_CONTROL         # free Ctrl-S/Ctrl-Q so Ctrl-S can't freeze the terminal
+# Left at zsh defaults on purpose: a pattern with no match is an error
+# (NOMATCH) instead of being passed through literally. EXTENDED_GLOB is
+# off because it turns `git show HEAD^` and `HEAD~1` into glob patterns.
+
+# --- Keys ------------------------------------------------------------------
+bindkey -e                    # emacs keymap, independent of $EDITOR
+# Terminals disagree on these sequences (normal vs application mode, tmux,
+# Ghostty), and terminfo only gives one of them, so bind every common form.
+bindkey -- '^[[H' beginning-of-line;  bindkey -- '^[OH' beginning-of-line;  bindkey -- '^[[1~' beginning-of-line
+bindkey -- '^[[F' end-of-line;        bindkey -- '^[OF' end-of-line;        bindkey -- '^[[4~' end-of-line
+bindkey -- '^[[3~' delete-char
+bindkey -- '^[[Z' reverse-menu-complete                  # Shift-Tab walks the menu backwards
+[[ -n ${terminfo[khome]} ]] && bindkey -- "${terminfo[khome]}" beginning-of-line
+[[ -n ${terminfo[kend]}  ]] && bindkey -- "${terminfo[kend]}"  end-of-line
+[[ -n ${terminfo[kdch1]} ]] && bindkey -- "${terminfo[kdch1]}" delete-char
+# Up/Down search history for the text already typed, instead of stepping blindly.
+autoload -Uz up-line-or-beginning-search down-line-or-beginning-search
+zle -N up-line-or-beginning-search
+zle -N down-line-or-beginning-search
+bindkey -- '^[[A' up-line-or-beginning-search;   bindkey -- '^[OA' up-line-or-beginning-search
+bindkey -- '^[[B' down-line-or-beginning-search; bindkey -- '^[OB' down-line-or-beginning-search
+
+# --- Completion ------------------------------------------------------------
+# Dump and cache live in the cache dir so they aren't stray dotfiles in $HOME.
+_zcache=${XDG_CACHE_HOME:-$HOME/.cache}/zsh
+[[ -d $_zcache/compcache ]] || mkdir -p "$_zcache/compcache"
+autoload -Uz compinit compaudit
+# Keep compaudit's safety check, but warn instead of letting compinit stop
+# at an "Ignore insecure directories?" prompt (common with group-writable
+# Homebrew completion dirs). -i then skips the insecure ones silently.
+if [[ -n $(compaudit 2>/dev/null) ]]; then
+  print -u2 -- "zshrc: insecure completion directories ignored; see 'compaudit'"
+  compinit -i -d "$_zcache/zcompdump"
+else
+  compinit -d "$_zcache/zcompdump"
+fi
+unset _zcache
+
+setopt COMPLETE_IN_WORD       # complete at the cursor, not only at word end
+setopt ALWAYS_TO_END          # move cursor to end of word after completing
+zstyle ':completion:*' menu select                       # arrow-key menu on second Tab
+# Try exact, then case-insensitive, then partial-word (f.b -> foo.bar).
+zstyle ':completion:*' matcher-list '' 'm:{a-zA-Z}={A-Za-z}' 'r:|[._-]=* r:|=*'
+zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS}    # color matches like ls
+zstyle ':completion:*' use-cache on
+zstyle ':completion:*' cache-path "${XDG_CACHE_HOME:-$HOME/.cache}/zsh/compcache"
+
+# --- Prompt: user@host dir (branch*+) --------------------------------------
+autoload -Uz vcs_info
+# git only: other backends make vcs_info probe for hg/svn/... on every prompt.
+zstyle ':vcs_info:*' enable git
+# check-for-changes runs git diff checks on every prompt, which is slow in
+# a big worktree. To bound it, swap to check-for-staged-changes (index
+# only, cheaper) or list huge repos in disable-patterns, e.g.:
+#   zstyle ':vcs_info:*' disable-patterns "${(b)HOME}/src/huge(|/*)"
+zstyle ':vcs_info:git:*' check-for-changes true
+zstyle ':vcs_info:git:*' stagedstr   '+'
+zstyle ':vcs_info:git:*' unstagedstr '*'
+zstyle ':vcs_info:git:*' formats       ' %F{magenta}(%b%u%c)%f'
+zstyle ':vcs_info:git:*' actionformats ' %F{magenta}(%b|%a%u%c)%f'
+precmd_functions+=(vcs_info)
+setopt PROMPT_SUBST           # re-expand ${vcs_info_msg_0_} each prompt
+
+# Yellow host over SSH so it's obvious which machine a shell belongs to.
+_hostcolor=green
+[[ -n $SSH_CONNECTION ]] && _hostcolor=yellow
+PROMPT='%F{'$_hostcolor'}%n@%m%f %F{blue}%~%f${vcs_info_msg_0_} %(?..%F{red}[%?]%f )%# '
+unset _hostcolor
+
+{{ if eq .chezmoi.os "linux" -}}
+# On a Linux desktop, use 1Password's agent. macOS is handled by
+# IdentityAgent in ssh config. Remote (SSH) shells use whatever agent sshd
+# forwarded (only from the Mac, and only to the host that opts in); ~/.ssh/rc
+# keeps a stable symlink to it for tmux.
+if [[ -z "$SSH_CONNECTION" && -S "$HOME/.1password/agent.sock" ]]; then
+  export SSH_AUTH_SOCK="$HOME/.1password/agent.sock"
+fi
+alias ls='ls --color=auto'
+{{- else if eq .chezmoi.os "darwin" }}
+alias ls='ls -G'
+{{- end }}

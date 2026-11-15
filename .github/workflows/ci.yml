@@ -71,8 +71,8 @@ jobs:
             private_dot_local/bin/executable_gh
 
       - name: Run shellcheck (zsh files; advisory)
-        # zsh isn't bash, and Oh My Zsh variables (ZSH_THEME, plugins, ...)
-        # look unused to shellcheck, so findings here don't fail the build.
+        # zsh isn't bash (zsh-only syntax and zstyle/setopt usage trip
+        # shellcheck), so findings here don't fail the build.
         run: |
           find . -type f \( -name "*.zsh" -o -name "dot_zshrc" \) ! -name "*.tmpl" \
             -not -path './.git/*' \

@@ -28,10 +28,10 @@ rights). On **Linux chezmoi installs nothing**: no dnf, no repos, no `sudo`, no
 
 | Tool | Used by | macOS (installed by script) | Linux (you provide) |
 | --- | --- | --- | --- |
-| zsh + [Oh My Zsh](https://ohmyz.sh/) | `.zshrc` | built in | `zsh`, set as login shell |
+| zsh (5.8+) | `.zshrc` (plain zsh, no framework or plugins) | built in | `zsh`, set as login shell |
 | git, git-lfs | `.gitconfig` (LFS filter is `required`) | Xcode CLT, Homebrew | `git`, `git-lfs` |
 | 1Password app | commit signing (`op-ssh-sign`), SSH agent | Homebrew cask | not installed: remote hosts sign over the forwarded Mac agent with `ssh-keygen -Y sign` |
-| 1Password CLI (`op`) | Oh My Zsh `1password` plugin (no-op if absent) | Homebrew cask | not needed |
+| 1Password CLI (`op`) | optional; nothing in the shell config depends on it | Homebrew cask | not needed |
 | vim | git `core.editor` | built in | `vim` |
 | [betterleaks](https://github.com/betterleaks/betterleaks) | global git `pre-commit` secret scan | Homebrew | `betterleaks` |
 | jq | Claude Code guard hook (parses the tool call) | Homebrew | `jq` |
@@ -45,8 +45,9 @@ The script warns (it does not install) if `tmux-256color` terminfo is missing.
 
 Also:
 
-- Oh My Zsh is pulled by chezmoi itself
-  ([`.chezmoiexternal.toml`](.chezmoiexternal.toml)), refreshed weekly.
+- The shell config downloads nothing: no framework, plugin manager or
+  self-update. Upgrading from Oh My Zsh leaves `~/.oh-my-zsh` and
+  `~/.cache/oh-my-zsh` behind unused; delete them by hand.
 - macOS: on a fresh machine the first apply starts the Xcode Command Line
   Tools installer and stops. Finish it, then run `chezmoi apply` again.
   Homebrew is installed if missing.
